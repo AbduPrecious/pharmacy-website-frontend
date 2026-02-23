@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
+import Link from 'next/link'; 
 
 export default function Home() {
   const [menus, setMenus] = useState([]);
@@ -457,15 +458,19 @@ export default function Home() {
                   <div className="p-6">
                     <h3 className="text-xl font-bold text-gray-800 mb-2">{item.attributes.title}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">{extractText(item.attributes.description)}</p>
-                    <a href="#" className="text-[#FFFF00] font-semibold hover:underline">Read More →</a>
+                    <Link href={`/news/${item.id}`} className="text-[#FFFF00] font-semibold hover:underline">
+  Read More →
+</Link>
                   </div>
                 </div>
               ))}
             </div>
             <div className="text-center mt-12">
-              <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
-                View All News
-              </button>
+              <Link href="/news">
+  <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
+    View All News
+  </button>
+</Link>
             </div>
           </div>
         </div>

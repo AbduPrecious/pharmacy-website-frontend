@@ -107,7 +107,7 @@ const getPlainText = (richText) => {
             <span className="text-gray-800 font-semibold">Contact</span>
           </div>
           <h1 className="text-6xl font-bold text-gray-800 text-center mb-4">
-            {contactData?.attributes?.pageTitle || 'Get In Touch'}
+            {contactData?.attributes?.pageTitle || 'Contact Us'}
           </h1>
           <p className="text-xl text-gray-700 text-center max-w-3xl mx-auto">
             We'd love to hear from you! Reach out with any questions, feedback, or collaboration ideas.
