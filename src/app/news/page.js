@@ -30,30 +30,21 @@ export default function NewsPage() {
     filterNews();
   }, [news, selectedCategory, searchQuery]);
 
-  useEffect(() => {
-    console.log('🔄 Current news state:', news);
-    console.log('📊 News length:', news.length);
-  }, [news]);
-
   const fetchNews = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/news?populate=*`, {
         headers: { Authorization: `Bearer ${API_TOKEN}` }
       });
-      console.log('📦 Full API Response:', response.data);
-      
       if (response.data?.data) {
-        console.log('✅ News data found:', response.data.data.length, 'items');
         setNews(response.data.data);
         // Find featured news
         const featured = response.data.data.find(item => item.attributes.isFeatured);
         setFeaturedNews(featured);
-      } else {
-        console.log('❌ No news data in response');
+        setFilteredNews(response.data.data);
       }
       setLoading(false);
     } catch (error) {
-      console.error('❌ Error fetching news:', error);
+      console.error('Error fetching news:', error);
       setLoading(false);
     }
   };
@@ -82,6 +73,17 @@ export default function NewsPage() {
     }
   };
 
+  const extractText = (richText) => {
+    if (!richText) return '';
+    if (typeof richText === 'string') return richText;
+    if (Array.isArray(richText)) {
+      return richText.map(block => 
+        block.children?.map(child => child.text).join(' ') || ''
+      ).join(' ');
+    }
+    return '';
+  };
+
   const filterNews = () => {
     let filtered = [...news];
 
@@ -94,25 +96,16 @@ export default function NewsPage() {
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(item =>
-        item.attributes.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.attributes.description && item.attributes.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
+      filtered = filtered.filter(item => {
+        const titleMatch = item.attributes.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const descriptionText = extractText(item.attributes.description).toLowerCase();
+        const descriptionMatch = descriptionText.includes(searchQuery.toLowerCase());
+        return titleMatch || descriptionMatch;
+      });
     }
 
     setFilteredNews(filtered);
     setCurrentPage(1);
-  };
-
-  const extractText = (richText) => {
-    if (!richText) return '';
-    if (typeof richText === 'string') return richText;
-    if (Array.isArray(richText)) {
-      return richText.map(block => 
-        block.children?.map(child => child.text).join(' ') || ''
-      ).join(' ');
-    }
-    return '';
   };
 
   // Pagination
@@ -140,25 +133,27 @@ export default function NewsPage() {
             <span className="mx-2">›</span>
             <span className="text-gray-800 font-semibold">News</span>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-4">News & Updates</h1>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-800 mb-4">Latest News & Updates</h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto">
             Stay informed with the latest happenings at Droga Pharma
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-16">
+      <div className="max-w-7xl mx-auto px-4 py-12">
         
         {/* Search and Filter Bar */}
         <div className="flex flex-col md:flex-row gap-4 mb-12">
           <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search news..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
-            />
+            <form onSubmit={(e) => e.preventDefault()}>
+              <input
+                type="text"
+                placeholder="Search news..."
+                value={searchQuery || ''}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+              />
+            </form>
           </div>
           <div className="md:w-64">
             <select
@@ -210,7 +205,7 @@ export default function NewsPage() {
           </div>
         )}
 
-        {/* News Grid - ONLY ONE */}
+        {/* News Grid */}
         <div>
           <h2 className="text-3xl font-bold text-gray-800 mb-8">All News</h2>
           
@@ -222,7 +217,7 @@ export default function NewsPage() {
                 {currentItems.map((item) => (
                   <Link key={item.id} href={`/news/${item.id}`}>
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group h-full flex flex-col">
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-48 overflow-hidden bg-gray-100">
                         <Image
                           src={item.attributes.image?.data?.attributes?.url ? `${API_URL}${item.attributes.image.data.attributes.url}` : '/placeholder.jpg'}
                           alt={item.attributes.title}
@@ -261,7 +256,7 @@ export default function NewsPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
                   >
                     Previous
                   </button>
@@ -270,10 +265,10 @@ export default function NewsPage() {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg transition ${
+                      className={`px-4 py-2 rounded-lg transition text-gray-900 ${
                         currentPage === i + 1
-                          ? 'bg-[#FFFF00] text-gray-800 font-semibold'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                          ? 'bg-[#FFFF00] font-semibold'
+                          : 'border border-gray-300 hover:bg-gray-50 bg-white'
                       }`}
                     >
                       {i + 1}
@@ -283,7 +278,7 @@ export default function NewsPage() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
                   >
                     Next
                   </button>
@@ -293,21 +288,21 @@ export default function NewsPage() {
           )}
         </div>
 
-        {/* Newsletter Signup */}
-        <div className="mt-16 bg-gray-50 rounded-2xl p-12 text-center">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Stay Updated</h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+        {/* Newsletter Signup - Mobile Optimized */}
+        <div className="mt-16 bg-gray-50 rounded-2xl p-6 md:p-12 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Stay Updated</h2>
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto text-sm md:text-base">
             Subscribe to our newsletter to receive the latest news and updates from Droga Pharma.
           </p>
-          <form className="max-w-md mx-auto flex gap-4">
+          <form className="max-w-md mx-auto flex flex-col sm:flex-row gap-3 px-4">
             <input
               type="email"
               placeholder="Your email address"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white text-sm"
             />
             <button
               type="submit"
-              className="bg-[#FFFF00] text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition"
+              className="bg-[#FFFF00] text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition text-sm md:text-base whitespace-nowrap"
             >
               Subscribe
             </button>

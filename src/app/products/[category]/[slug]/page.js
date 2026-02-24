@@ -69,6 +69,18 @@ const fetchFooter = async () => {
     console.error('Error fetching footer:', error);
   }
 };
+
+// Helper to extract text from rich text
+const extractText = (richText) => {
+  if (!richText) return '';
+  if (typeof richText === 'string') return richText;
+  if (Array.isArray(richText)) {
+    return richText.map(block => 
+      block.children?.map(child => child.text).join(' ') || ''
+    ).join(' ');
+  }
+  return '';
+};
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!product) return (
@@ -136,8 +148,8 @@ const fetchFooter = async () => {
 
             <div className="prose max-w-none mb-8">
               <p className="text-gray-700 leading-relaxed">
-                {product.attributes.description || 'No description available.'}
-              </p>
+  {extractText(product.attributes.description)}
+</p>
             </div>
 
             <Link

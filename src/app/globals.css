@@ -76,3 +76,10 @@ body {
 .group:hover .animate-marquee2 {
   animation-play-state: paused;
 }
+
+/* Mobile pagination optimization */
+@media (max-width: 640px) {
+  .pagination-container {
+    gap: 0.25rem;
+  }
+}

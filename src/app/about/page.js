@@ -74,25 +74,31 @@ export default function AboutPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-16 space-y-20">
         
-        {/* 1. Welcome Section with Image */}
-        {aboutData?.attributes?.welcomeTitle && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">{aboutData.attributes.welcomeTitle}</h2>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                {extractText(aboutData.attributes.welcomeDescription)}
-              </p>
-            </div>
-            <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
-              <Image
-                src={aboutData.attributes.welcomeImage?.data?.attributes?.url ? `${API_URL}${aboutData.attributes.welcomeImage.data.attributes.url}` : '/placeholder.jpg'}
-                alt="Welcome"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
-        )}
+       {/* 1. Welcome Section with Image */}
+{aboutData?.attributes?.welcomeTitle && (
+  <div>
+    {/* Centered Title */}
+    <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8 text-center">
+      {aboutData.attributes.welcomeTitle}
+    </h2>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div>
+        <p className="text-lg text-gray-700 leading-relaxed">
+          {extractText(aboutData.attributes.welcomeDescription)}
+        </p>
+      </div>
+      <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
+        <Image
+          src={aboutData.attributes.welcomeImage?.data?.attributes?.url ? `${API_URL}${aboutData.attributes.welcomeImage.data.attributes.url}` : '/placeholder.jpg'}
+          alt="Welcome"
+          fill
+          className="object-cover"
+        />
+      </div>
+    </div>
+  </div>
+)}
 
         {/* 2. Our Values */}
         {aboutData?.attributes?.values?.length > 0 && (
