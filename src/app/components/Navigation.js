@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation'; // 👈 Add usePathname
+import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import MobileMenu from './MobileMenu';
 
@@ -11,7 +11,7 @@ export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
-  const pathname = usePathname(); // 👈 Get current path
+  const pathname = usePathname();
 
   const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
   const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
@@ -65,23 +65,19 @@ export default function Navigation() {
     if (!searchQuery.trim()) return;
 
     try {
-      // Search for products matching the query
       const response = await axios.get(`${API_URL}/api/products?filters[name][$containsi]=${encodeURIComponent(searchQuery)}&populate=*`, {
         headers: { Authorization: `Bearer ${API_TOKEN}` }
       });
 
       if (response.data?.data && response.data.data.length > 0) {
-        // If exactly one product matches, go to its detail page
         if (response.data.data.length === 1) {
           const product = response.data.data[0];
           const categorySlug = product.attributes.category?.data?.attributes?.slug || 'products';
           router.push(`/products/${categorySlug}/${product.attributes.slug}`);
         } else {
-          // If multiple products match, go to products page with search query
           router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
         }
       } else {
-        // No products found - show alert or redirect to products page with no results
         router.push(`/products?search=${encodeURIComponent(searchQuery)}&noresults=true`);
       }
       
@@ -92,13 +88,13 @@ export default function Navigation() {
     }
   };
 
-  // Only show search bar on homepage
-  const showSearchBar = pathname === '/';
+  // Check if current page is homepage
+  const isHomePage = pathname === '/';
 
   return (
     <>
-      {/* TOP YELLOW BAR - Desktop only, only on homepage */}
-      {!isScrolled && showSearchBar && (
+      {/* TOP YELLOW BAR - ONLY on homepage */}
+      {!isScrolled && isHomePage && (
         <div className="hidden md:block bg-[#FFFF00] py-3 md:py-4 transition-all duration-300">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-end">
@@ -145,7 +141,7 @@ export default function Navigation() {
               )}
             </div>
 
-            {/* Desktop Navigation - hidden on mobile */}
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-6">
               {getMainMenus().map((menu) => {
                 const dropdownItems = getDropdownItems(menu.id);
@@ -206,7 +202,7 @@ export default function Navigation() {
               })}
             </div>
 
-            {/* Mobile Menu - visible on mobile */}
+            {/* Mobile Menu */}
             <div className="md:hidden">
               <MobileMenu 
                 menus={getMainMenus()} 
