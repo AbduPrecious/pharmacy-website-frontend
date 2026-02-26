@@ -10,19 +10,14 @@ export default function CareersPage() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    // Personal Info
     fullName: '',
     gender: '',
     dateOfBirth: '',
     location: '',
-    
-    // Contact Info
     phoneNumber: '',
     secondaryPhone: '',
     email: '',
     secondaryEmail: '',
-    
-    // Professional Info
     profession: '',
     currentJobTitle: '',
     yearsExperience: '',
@@ -31,16 +26,10 @@ export default function CareersPage() {
     educationLevel: '',
     fieldOfStudy: '',
     salaryRange: '',
-    
-    // Languages
     otherLanguages: false,
     languageExplanation: '',
-    
-    // Relationships
     hasRelationship: false,
     hasRelative: false,
-    
-    // Files
     cv: null,
     coverLetter: null
   });
@@ -72,17 +61,17 @@ export default function CareersPage() {
     }
   };
 
-  // Helper to extract text from rich text
-const extractText = (richText) => {
-  if (!richText) return '';
-  if (typeof richText === 'string') return richText;
-  if (Array.isArray(richText)) {
-    return richText.map(block => 
-      block.children?.map(child => child.text).join(' ') || ''
-    ).join(' ');
-  }
-  return '';
-};
+  const extractText = (richText) => {
+    if (!richText) return '';
+    if (typeof richText === 'string') return richText;
+    if (Array.isArray(richText)) {
+      return richText.map(block => 
+        block.children?.map(child => child.text).join(' ') || ''
+      ).join(' ');
+    }
+    return '';
+  };
+
   const fetchFooter = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/site-footer?populate[branchLocations][populate][0]=phones&populate[branchLocations][populate][1]=emails&populate[footerLinks]=*&populate[socialPlatforms]=*`, {
@@ -117,52 +106,80 @@ const extractText = (richText) => {
     e.preventDefault();
     setFormStatus('sending');
 
-    // Create FormData for file upload
-    const submitData = new FormData();
-    
-    // Add all text fields
-    Object.keys(formData).forEach(key => {
-      if (key !== 'cv' && key !== 'coverLetter' && formData[key]) {
-        submitData.append(`data[${key}]`, formData[key]);
-      }
-    });
-    
-    // Add job position
-    if (selectedJob) {
-      submitData.append('data[jobPosition]', selectedJob.id);
-    }
-    
-    // Add files
-    if (formData.cv) {
-      submitData.append('files.cv', formData.cv);
-    }
-    if (formData.coverLetter) {
-      submitData.append('files.coverLetter', formData.coverLetter);
-    }
-
     try {
-      await axios.post(`${API_URL}/api/job-applications`, submitData, {
+      const applicationData = {
+        fullName: formData.fullName,
+        gender: formData.gender === 'male' ? 'Male' : 
+                formData.gender === 'female' ? 'Female' : 'Other',
+        dateOfBirth: formData.dateOfBirth,
+        location: formData.location,
+        phoneNumber: formData.phoneNumber,
+        secondaryPhone: formData.secondaryPhone || null,
+        email: formData.email,
+        secondaryEmail: formData.secondaryEmail || null,
+        profession: formData.profession,
+        currentJobTitle: formData.currentJobTitle,
+        yearsExperience: parseInt(formData.yearsExperience) || 0,
+        industry: formData.industry === 'healthcare' ? 'Healthcare' :
+                  formData.industry === 'pharmaceutical' ? 'Pharmaceutical' :
+                  formData.industry === 'medical_devices' ? 'Medical Devices' :
+                  formData.industry === 'hospital' ? 'Hospital' :
+                  formData.industry === 'research' ? 'Research' :
+                  formData.industry === 'education' ? 'Education' : 'Other',
+        careerLevel: formData.careerLevel === 'entry' ? 'Entry Level' :
+                     formData.careerLevel === 'junior' ? 'Junior' :
+                     formData.careerLevel === 'mid' ? 'Mid-Level' :
+                     formData.careerLevel === 'senior' ? 'Senior' :
+                     formData.careerLevel === 'manager' ? 'Manager' :
+                     formData.careerLevel === 'director' ? 'Director' : null,
+        educationLevel: formData.educationLevel === 'high_school' ? 'High School' :
+                        formData.educationLevel === 'diploma' ? 'Diploma' :
+                        formData.educationLevel === 'bachelors' ? 'Bachelor\'s' :
+                        formData.educationLevel === 'masters' ? 'Master\'s' :
+                        formData.educationLevel === 'phd' ? 'PhD' : 'Other',
+        fieldOfStudy: formData.fieldOfStudy || null,
+        salaryRange: formData.salaryRange === '0-5000' ? 'ETB 0-5000' :
+                     formData.salaryRange === '5000-10000' ? 'ETB 5000-10000' :
+                     formData.salaryRange === '10000-20000' ? 'ETB 10000-20000' :
+                     formData.salaryRange === '20000-30000' ? 'ETB 20000-30000' :
+                     formData.salaryRange === '30000-50000' ? 'ETB 30000-50000' :
+                     formData.salaryRange === '50000+' ? 'ETB 50000+' : null,
+        otherLanguages: formData.otherLanguages || false,
+        languageExplanation: formData.languageExplanation || null,
+        hasRelationship: formData.hasRelationship || false,
+        hasRelative: formData.hasRelative || false,
+        jobPosition: selectedJob?.id
+      };
+
+      const response = await axios.post(`${API_URL}/api/job-applications`, {
+        data: applicationData
+      }, {
         headers: {
-          'Authorization': `Bearer ${API_TOKEN}`,
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
-      
+
+      console.log('✅ Success:', response.data);
       setFormStatus('success');
-      setFormData({
-        fullName: '', gender: '', dateOfBirth: '', location: '',
-        phoneNumber: '', secondaryPhone: '', email: '', secondaryEmail: '',
-        profession: '', currentJobTitle: '', yearsExperience: '', industry: '',
-        careerLevel: '', educationLevel: '', fieldOfStudy: '', salaryRange: '',
-        otherLanguages: false, languageExplanation: '',
-        hasRelationship: false, hasRelative: false,
-        cv: null, coverLetter: null
-      });
-      setShowForm(false);
-      setTimeout(() => setFormStatus(null), 5000);
+      
+      setTimeout(() => {
+        setShowForm(false);
+        setFormStatus(null);
+        setFormData({
+          fullName: '', gender: '', dateOfBirth: '', location: '',
+          phoneNumber: '', secondaryPhone: '', email: '', secondaryEmail: '',
+          profession: '', currentJobTitle: '', yearsExperience: '', industry: '',
+          careerLevel: '', educationLevel: '', fieldOfStudy: '', salaryRange: '',
+          otherLanguages: false, languageExplanation: '',
+          hasRelationship: false, hasRelative: false,
+          cv: null, coverLetter: null
+        });
+      }, 3000);
+
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('❌ Error:', error);
       setFormStatus('error');
+      setTimeout(() => setFormStatus(null), 5000);
     }
   };
 
@@ -170,7 +187,7 @@ const extractText = (richText) => {
 
   return (
     <div className="min-h-screen bg-white">
-      
+    
 
       {/* Header */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-16">
@@ -220,13 +237,11 @@ const extractText = (richText) => {
                       )}
                     </div>
                     
-                    <p className="text-gray-700 mb-4 line-clamp-3">{extractText(job.attributes.description)}</p>
-                    
                     <button
                       onClick={() => handleApply(job)}
                       className="w-full bg-[#FFFF00] text-gray-800 py-3 rounded-lg font-bold hover:bg-yellow-400 transition transform hover:scale-105"
                     >
-                      Apply Now
+                      View Details & Apply
                     </button>
                   </div>
                   
@@ -257,22 +272,8 @@ const extractText = (richText) => {
 
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 p-8 rounded-t-2xl">
-                  <h2 className="text-3xl font-bold text-gray-800">Application Form</h2>
-                  {/* Add this helper function INSIDE the modal, right here */}
-{(() => {
-  const extractText = (richText) => {
-    if (!richText) return '';
-    if (typeof richText === 'string') return richText;
-    if (Array.isArray(richText)) {
-      return richText.map(block => 
-        block.children?.map(child => child.text).join(' ') || ''
-      ).join(' ');
-    }
-    return '';
-  };
-  return null;
-})()}
-                  <p className="text-gray-700 mt-2">Position: {selectedJob.attributes.title}</p>
+                  <h2 className="text-3xl font-bold text-gray-800">Apply for: {selectedJob.attributes.title}</h2>
+                  <p className="text-gray-700 mt-2">{selectedJob.attributes.department} • {selectedJob.attributes.location}</p>
                 </div>
 
                 {/* Form */}
@@ -646,36 +647,61 @@ const extractText = (richText) => {
                   </div>
 
                   {/* Documents */}
-                  <div className="space-y-4">
-                    <h3 className="text-2xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Documents</h3>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Please Attach Your CV *</label>
-                      <input
-                        type="file"
-                        name="cv"
-                        onChange={handleInputChange}
-                        required
-                        accept=".pdf,.doc,.docx"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition bg-white"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
-                    </div>
+<div className="space-y-4">
+  <h3 className="text-2xl font-semibold text-gray-800 border-b border-gray-200 pb-2">Documents</h3>
+  
+  {/* CV Upload */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Please Attach Your CV *</label>
+    <div className="flex items-center gap-4">
+      <input
+        type="file"
+        name="cv"
+        id="cv-upload"
+        onChange={handleInputChange}
+        required
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+      />
+      <label
+        htmlFor="cv-upload"
+        className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg border border-gray-300 transition"
+      >
+        Choose File
+      </label>
+      <span className="text-gray-600 text-sm">
+        {formData.cv ? formData.cv.name : 'No file chosen'}
+      </span>
+    </div>
+    <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
+  </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Please Attach Your Cover Letter *</label>
-                      <input
-                        type="file"
-                        name="coverLetter"
-                        onChange={handleInputChange}
-                        required
-                        accept=".pdf,.doc,.docx"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition bg-white"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
-                    </div>
-                  </div>
-
+  {/* Cover Letter Upload */}
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-2">Please Attach Your Cover Letter *</label>
+    <div className="flex items-center gap-4">
+      <input
+        type="file"
+        name="coverLetter"
+        id="coverLetter-upload"
+        onChange={handleInputChange}
+        required
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+      />
+      <label
+        htmlFor="coverLetter-upload"
+        className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-lg border border-gray-300 transition"
+      >
+        Choose File
+      </label>
+      <span className="text-gray-600 text-sm">
+        {formData.coverLetter ? formData.coverLetter.name : 'No file chosen'}
+      </span>
+    </div>
+    <p className="text-sm text-gray-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 5MB)</p>
+  </div>
+</div>
                   {/* Submit Button */}
                   <div className="pt-4">
                     <button
@@ -687,16 +713,21 @@ const extractText = (richText) => {
                     </button>
                   </div>
 
-                  {/* Status Messages */}
+                  {/* Success Message */}
                   {formStatus === 'success' && (
-                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg text-center">
-                      Application submitted successfully! We'll review and get back to you soon.
+                    <div className="mt-6 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
+                      <div className="text-5xl mb-4">✅</div>
+                      <h3 className="text-2xl font-bold text-green-800 mb-2">Application Sent Successfully!</h3>
+                      <p className="text-green-700 mb-4">
+                        Thank you for applying. We'll review your application and get back to you soon.
+                      </p>
                     </div>
                   )}
 
+                  {/* Error Message */}
                   {formStatus === 'error' && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-center">
-                      There was an error submitting your application. Please try again.
+                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                      <p className="text-red-600 font-semibold">❌ Submission failed. Please try again.</p>
                     </div>
                   )}
                 </form>

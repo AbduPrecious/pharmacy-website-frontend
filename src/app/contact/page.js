@@ -69,18 +69,57 @@ const getPlainText = (richText) => {
   return '';
 };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setFormStatus('sending');
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setFormStatus('sending');
+  
+  try {
+    const contactData = {
+      data: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        subject: formData.subject,
+        message: formData.message
+      }
+    };
     
-    // Simulate form submission (replace with actual API call)
-    setTimeout(() => {
-      setFormStatus('success');
-      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
-      setTimeout(() => setFormStatus(null), 3000);
-    }, 1500);
-  };
-
+    console.log('📦 Sending contact data:', JSON.stringify(contactData, null, 2));
+    
+    const response = await axios.post(`${API_URL}/api/contacts`, contactData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('✅ Contact form submitted:', response.data);
+    setFormStatus('success');
+    
+    // Reset form
+    setFormData({
+      name: '', email: '', phone: '', subject: '', message: ''
+    });
+    
+    setTimeout(() => setFormStatus(null), 5000);
+    
+  } catch (error) {
+    console.error('❌ Full error object:', error);
+    console.error('❌ Response data:', error.response?.data);
+    console.error('❌ Error details:', error.response?.data?.error?.details);
+    
+    if (error.response?.data?.error?.message) {
+      alert(`Error: ${error.response.data.error.message}`);
+      console.error('❌ Strapi message:', error.response.data.error.message);
+    }
+    
+    if (error.response?.data?.error?.details?.errors) {
+      console.error('❌ Validation errors:', error.response.data.error.details.errors);
+      alert('Validation errors: ' + JSON.stringify(error.response.data.error.details.errors));
+    }
+    
+    setFormStatus('error');
+  }
+};
   const extractText = (richText) => {
     if (!richText) return '';
     if (typeof richText === 'string') return richText;
