@@ -58,68 +58,69 @@ export default function ContactPage() {
   };
 
   // Helper to extract plain text with line breaks preserved
-const getPlainText = (richText) => {
-  if (!richText) return '';
-  if (typeof richText === 'string') return richText;
-  if (Array.isArray(richText)) {
-    return richText.map(block => 
-      block.children?.map(child => child.text).join('') || ''
-    ).join('\n'); // Join with newlines to preserve structure
-  }
-  return '';
-};
+  const getPlainText = (richText) => {
+    if (!richText) return '';
+    if (typeof richText === 'string') return richText;
+    if (Array.isArray(richText)) {
+      return richText.map(block => 
+        block.children?.map(child => child.text).join('') || ''
+      ).join('\n');
+    }
+    return '';
+  };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setFormStatus('sending');
-  
-  try {
-    const contactData = {
-      data: {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || null,
-        subject: formData.subject,
-        message: formData.message
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormStatus('sending');
+    
+    try {
+      const contactData = {
+        data: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          subject: formData.subject,
+          message: formData.message
+        }
+      };
+      
+      console.log('📦 Sending contact data:', JSON.stringify(contactData, null, 2));
+      
+      const response = await axios.post(`${API_URL}/api/contacts`, contactData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ Contact form submitted:', response.data);
+      setFormStatus('success');
+      
+      // Reset form
+      setFormData({
+        name: '', email: '', phone: '', subject: '', message: ''
+      });
+      
+      setTimeout(() => setFormStatus(null), 5000);
+      
+    } catch (error) {
+      console.error('❌ Full error object:', error);
+      console.error('❌ Response data:', error.response?.data);
+      console.error('❌ Error details:', error.response?.data?.error?.details);
+      
+      if (error.response?.data?.error?.message) {
+        alert(`Error: ${error.response.data.error.message}`);
+        console.error('❌ Strapi message:', error.response.data.error.message);
       }
-    };
-    
-    console.log('📦 Sending contact data:', JSON.stringify(contactData, null, 2));
-    
-    const response = await axios.post(`${API_URL}/api/contacts`, contactData, {
-      headers: {
-        'Content-Type': 'application/json'
+      
+      if (error.response?.data?.error?.details?.errors) {
+        console.error('❌ Validation errors:', error.response.data.error.details.errors);
+        alert('Validation errors: ' + JSON.stringify(error.response.data.error.details.errors));
       }
-    });
-    
-    console.log('✅ Contact form submitted:', response.data);
-    setFormStatus('success');
-    
-    // Reset form
-    setFormData({
-      name: '', email: '', phone: '', subject: '', message: ''
-    });
-    
-    setTimeout(() => setFormStatus(null), 5000);
-    
-  } catch (error) {
-    console.error('❌ Full error object:', error);
-    console.error('❌ Response data:', error.response?.data);
-    console.error('❌ Error details:', error.response?.data?.error?.details);
-    
-    if (error.response?.data?.error?.message) {
-      alert(`Error: ${error.response.data.error.message}`);
-      console.error('❌ Strapi message:', error.response.data.error.message);
+      
+      setFormStatus('error');
     }
-    
-    if (error.response?.data?.error?.details?.errors) {
-      console.error('❌ Validation errors:', error.response.data.error.details.errors);
-      alert('Validation errors: ' + JSON.stringify(error.response.data.error.details.errors));
-    }
-    
-    setFormStatus('error');
-  }
-};
+  };
+
   const extractText = (richText) => {
     if (!richText) return '';
     if (typeof richText === 'string') return richText;
@@ -135,7 +136,7 @@ const getPlainText = (richText) => {
 
   return (
     <div className="min-h-screen bg-white">
-     
+    
 
       {/* Header with Breadcrumb */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-16">
@@ -158,7 +159,7 @@ const getPlainText = (richText) => {
         
         {/* Contact Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Card 1 */}
+          {/* Card 1 - Visit Us */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-100 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2">
             <div className="w-16 h-16 bg-[#FFFF00] rounded-full flex items-center justify-center mb-6 mx-auto">
               <span className="text-3xl">{contactData?.attributes?.card1Icon || '📍'}</span>
@@ -171,31 +172,33 @@ const getPlainText = (richText) => {
                 'Gulele Subcity, Addis Ababa, Ethiopia\nNew/Droga Building'}
             </div>
           </div>
-{/* Card 2 - Call Us */}
-<div className="bg-gradient-to-br from-yellow-50 to-orange-100 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2">
-  <div className="w-16 h-16 bg-[#FFFF00] rounded-full flex items-center justify-center mb-6 mx-auto">
-    <span className="text-3xl">{contactData?.attributes?.card2Icon || '📞'}</span>
-  </div>
-  <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-    {contactData?.attributes?.card2Title || 'Call Us'}
-  </h3>
-  <div className="text-gray-600 text-center leading-relaxed">
-    {contactData?.attributes?.card2Details ? (
-      <div className="space-y-2">
-        {getPlainText(contactData.attributes.card2Details).split('\n').map((line, i) => (
-          line.trim() && <p key={i}>{line}</p>
-        ))}
-      </div>
-    ) : (
-      <div className="space-y-2">
-        <p>+251 112 734 554</p>
-        <p>+251 913 667 537</p>
-        <p>+251 912 345 678 (24/7 Support)</p>
-      </div>
-    )}
-  </div>
-</div>
-          {/* Card 3 */}
+
+          {/* Card 2 - Call Us */}
+          <div className="bg-gradient-to-br from-yellow-50 to-orange-100 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2">
+            <div className="w-16 h-16 bg-[#FFFF00] rounded-full flex items-center justify-center mb-6 mx-auto">
+              <span className="text-3xl">{contactData?.attributes?.card2Icon || '📞'}</span>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+              {contactData?.attributes?.card2Title || 'Call Us'}
+            </h3>
+            <div className="text-gray-600 text-center leading-relaxed">
+              {contactData?.attributes?.card2Details ? (
+                <div className="space-y-2">
+                  {getPlainText(contactData.attributes.card2Details).split('\n').map((line, i) => (
+                    line.trim() && <p key={i}>{line}</p>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p>+251 112 734 554</p>
+                  <p>+251 913 667 537</p>
+                  <p>+251 912 345 678 (24/7 Support)</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Card 3 - Email Us */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2">
             <div className="w-16 h-16 bg-[#FFFF00] rounded-full flex items-center justify-center mb-6 mx-auto">
               <span className="text-3xl">{contactData?.attributes?.card3Icon || '✉️'}</span>
@@ -218,70 +221,70 @@ const getPlainText = (richText) => {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
-  <input
-    type="text"
-    name="name"
-    value={formData.name}
-    onChange={handleInputChange}
-    required
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
-    placeholder="John Doe"
-  />
-</div>
                 <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">Your Email</label>
-  <input
-    type="email"
-    name="email"
-    value={formData.email}
-    onChange={handleInputChange}
-    required
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
-    placeholder="john@example.com"
-  />
-</div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+                    placeholder="John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Your Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+                    placeholder="john@example.com"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-  <input
-    type="tel"
-    name="phone"
-    value={formData.phone}
-    onChange={handleInputChange}
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
-    placeholder="+251 912 345 678"
-  />
-</div>
-               <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
-  <input
-    type="text"
-    name="subject"
-    value={formData.subject}
-    onChange={handleInputChange}
-    required
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
-    placeholder="Inquiry about..."
-  />
-</div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+                    placeholder="+251 912 345 678"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subject</label>
+                  <input
+                    type="text"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition text-gray-900 bg-white"
+                    placeholder="Inquiry about..."
+                  />
+                </div>
               </div>
 
-             <div>
-  <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
-  <textarea
-    name="message"
-    value={formData.message}
-    onChange={handleInputChange}
-    required
-    rows="5"
-    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition resize-none text-gray-900 bg-white"
-    placeholder="Tell us how we can help..."
-  />
-</div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Your Message</label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  required
+                  rows="5"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFFF00] focus:border-transparent outline-none transition resize-none text-gray-900 bg-white"
+                  placeholder="Tell us how we can help..."
+                />
+              </div>
 
               <button
                 type="submit"
@@ -296,6 +299,12 @@ const getPlainText = (richText) => {
                   Message sent successfully! We'll get back to you soon.
                 </div>
               )}
+              
+              {formStatus === 'error' && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg text-center">
+                  Error sending message. Please try again.
+                </div>
+              )}
             </form>
           </div>
 
@@ -304,7 +313,7 @@ const getPlainText = (richText) => {
             <h2 className="text-3xl font-bold text-gray-800 mb-6">Our Location</h2>
             <div className="relative h-[400px] w-full rounded-lg overflow-hidden">
               <iframe
-                src={contactData?.attributes?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.83523456789!2d38.763456!3d9.012345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwMDAnNDQuNCJOIDM4wrA0NSc0OC4zIkU!5e0!3m2!1sen!2set!4v1234567890'}
+                src={contactData?.attributes?.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d600.2417299918443!2d38.725142!3d9.059361!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b891708d5e70b%3A0xf05afa9df59c924e!2sDroga%20Group%20Companies!5e1!3m2!1sen!2set!4v1771573775837!5m2!1sen!2set'}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}

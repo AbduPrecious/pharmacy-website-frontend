@@ -21,14 +21,9 @@ export default function CategoryProductsPage() {
   useEffect(() => {
     if (categorySlug) {
       fetchCategoryAndProducts();
+      fetchFooter();
     }
   }, [categorySlug]);
-  useEffect(() => {
-  if (categorySlug) {
-    fetchCategoryAndProducts();
-    fetchFooter();
-  }
-}, [categorySlug]);
 
   const fetchCategoryAndProducts = async () => {
     try {
@@ -58,22 +53,23 @@ export default function CategoryProductsPage() {
       setLoading(false);
     }
   };
+
   const fetchFooter = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/site-footer?populate[branchLocations][populate][0]=phones&populate[branchLocations][populate][1]=emails&populate[footerLinks]=*&populate[socialPlatforms]=*`, {
-      headers: { Authorization: `Bearer ${API_TOKEN}` }
-    });
-    if (response.data?.data) setFooter(response.data.data);
-  } catch (error) {
-    console.error('Error fetching footer:', error);
-  }
-};
+    try {
+      const response = await axios.get(`${API_URL}/api/site-footer?populate[branchLocations][populate][0]=phones&populate[branchLocations][populate][1]=emails&populate[footerLinks]=*&populate[socialPlatforms]=*`, {
+        headers: { Authorization: `Bearer ${API_TOKEN}` }
+      });
+      if (response.data?.data) setFooter(response.data.data);
+    } catch (error) {
+      console.error('Error fetching footer:', error);
+    }
+  };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!category) return (
     <div className="min-h-screen bg-white">
-      
+     
       <div className="max-w-7xl mx-auto px-4 py-16 text-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-4">Category Not Found</h1>
         <Link href="/products" className="bg-[#FFFF00] text-gray-800 px-6 py-3 rounded-lg font-semibold hover:bg-yellow-400 transition">
@@ -85,7 +81,7 @@ export default function CategoryProductsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-    
+      
 
       {/* Header */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-16">
@@ -111,7 +107,7 @@ export default function CategoryProductsPage() {
           Showing {products.length} {products.length === 1 ? 'product' : 'products'}
         </div>
 
-        {/* Products Grid */}
+        {/* Products Grid - FIXED IMAGE URLS */}
         {products.length === 0 ? (
           <p className="text-center text-gray-600 py-12">No products found in this category.</p>
         ) : (
@@ -122,10 +118,12 @@ export default function CategoryProductsPage() {
                   <div className="relative h-64 overflow-hidden bg-gray-100">
                     {product.attributes.image?.data?.attributes?.url ? (
                       <Image
-                        src={`${API_URL}${product.attributes.image.data.attributes.url}`}
+                        // FIXED: Using the full URL directly from Strapi
+                        src={product.attributes.image.data.attributes.url?.startsWith('http') ? product.attributes.image.data.attributes.url : `${API_URL}${product.attributes.image.data.attributes.url}`}
                         alt={product.attributes.name}
                         fill
                         className="object-contain p-4 group-hover:scale-105 transition duration-500"
+                        unoptimized={true}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -148,7 +146,7 @@ export default function CategoryProductsPage() {
           </div>
         )}
 
-               {/* Back to Products */}
+        {/* Back to Products */}
         <div className="text-center mt-12">
           <Link href="/products" className="inline-block bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
             ← Back to All Products

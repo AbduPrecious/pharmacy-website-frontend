@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
+import Navigation from '../../components/Navigation';
 
 export default function NewsDetailPage() {
   const [newsItem, setNewsItem] = useState(null);
@@ -23,35 +24,36 @@ export default function NewsDetailPage() {
     }
   }, [newsId]);
 
- const fetchNewsItem = async () => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/api/news/${newsId}?populate[image]=*&populate[related_articles_v2][populate]=image`,
-      {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-      }
-    );
-    
-    console.log('🔍 News ID:', newsId);
-    console.log('🔍 Full news data:', response.data);
-    console.log('🔍 Image field:', response.data.data?.attributes?.image);
-    
-    if (response.data?.data) {
-      setNewsItem(response.data.data);
-      console.log('📸 Full image object:', response.data.data.attributes.image);
+  const fetchNewsItem = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/news/${newsId}?populate[image]=*&populate[related_articles_v2][populate]=image`,
+        {
+          headers: { Authorization: `Bearer ${API_TOKEN}` }
+        }
+      );
       
-      // Set related articles from the relation field
-      if (response.data.data.attributes.related_articles_v2?.data) {
-        setRelatedNews(response.data.data.attributes.related_articles_v2.data);
+      console.log('🔍 News ID:', newsId);
+      console.log('🔍 Full news data:', response.data);
+      console.log('🔍 Image field:', response.data.data?.attributes?.image);
+      
+      if (response.data?.data) {
+        setNewsItem(response.data.data);
+        console.log('📸 Full image object:', response.data.data.attributes.image);
+        
+        // Set related articles from the relation field
+        if (response.data.data.attributes.related_articles_v2?.data) {
+          setRelatedNews(response.data.data.attributes.related_articles_v2.data);
+        }
       }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      setError(error.message);
+      setLoading(false);
     }
-    setLoading(false);
-  } catch (error) {
-    console.error('Error fetching news:', error);
-    setError(error.message);
-    setLoading(false);
-  }
-};
+  };
+
   const extractText = (richText) => {
     if (!richText) return '';
     if (typeof richText === 'string') return richText;
@@ -63,7 +65,6 @@ export default function NewsDetailPage() {
     return '';
   };
 
-  
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
@@ -80,9 +81,10 @@ export default function NewsDetailPage() {
     </div>
   );
 
-  
   return (
     <div className="bg-white min-h-screen">
+      
+      
       {/* Header with Breadcrumb */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-12">
         <div className="max-w-7xl mx-auto px-4">
@@ -112,50 +114,54 @@ export default function NewsDetailPage() {
           </div>
         </div>
 
-        {/* Featured Image */}
-<div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl mb-10 bg-gray-100">
-  {newsItem.attributes.image?.data?.attributes?.url ? (
-    <Image
-      src={`${API_URL}${newsItem.attributes.image.data.attributes.url}`}
-      alt={newsItem.attributes.title}
-      fill
-      className="object-contain"
-      priority
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-    />
-  ) : (
-    <div className="w-full h-full flex items-center justify-center">
-      <span className="text-gray-500 text-lg">No image available</span>
-    </div>
-  )}
-</div>
+        {/* Featured Image - FIXED URL */}
+        <div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-xl mb-10 bg-gray-100">
+          {newsItem.attributes.image?.data?.attributes?.url ? (
+            <Image
+              // FIXED: Using the full URL directly from Strapi
+            src={newsItem.attributes.image.data.attributes.url?.startsWith('http') ? newsItem.attributes.image.data.attributes.url : `${API_URL}${newsItem.attributes.image.data.attributes.url}`}
+              alt={newsItem.attributes.title}
+              fill
+              className="object-contain"
+              priority
+              unoptimized={true}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-gray-500 text-lg">No image available</span>
+            </div>
+          )}
+        </div>
+
         {/* Article Content */}
-<div className="prose prose-lg max-w-none mb-12">
-  {/* Description (short preview) */}
-  {newsItem.attributes.description && (
-    <div className="mb-8 pb-6 border-b border-gray-200">
-      <h3 className="text-xl font-semibold text-gray-800 mb-3">Summary</h3>
-      <div className="text-gray-700 leading-relaxed">
-        {extractText(newsItem.attributes.description)}
-      </div>
-    </div>
-  )}
-  
-  {/* Full Content */}
-  {newsItem.attributes.content && (
-    <div>
-      <h3 className="text-xl font-semibold text-gray-800 mb-3">Full Article</h3>
-      <div className="text-gray-700 leading-relaxed">
-        {extractText(newsItem.attributes.content)}
-      </div>
-    </div>
-  )}
-  
-  {/* Fallback if both are empty */}
-  {!newsItem.attributes.description && !newsItem.attributes.content && (
-    <p className="text-gray-500 italic">No content available</p>
-  )}
-</div>
+        <div className="prose prose-lg max-w-none mb-12">
+          {/* Description (short preview) */}
+          {newsItem.attributes.description && (
+            <div className="mb-8 pb-6 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Summary</h3>
+              <div className="text-gray-700 leading-relaxed">
+                {extractText(newsItem.attributes.description)}
+              </div>
+            </div>
+          )}
+          
+          {/* Full Content */}
+          {newsItem.attributes.content && (
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-3">Full Article</h3>
+              <div className="text-gray-700 leading-relaxed">
+                {extractText(newsItem.attributes.content)}
+              </div>
+            </div>
+          )}
+          
+          {/* Fallback if both are empty */}
+          {!newsItem.attributes.description && !newsItem.attributes.content && (
+            <p className="text-gray-500 italic">No content available</p>
+          )}
+        </div>
+
         {/* Share Buttons */}
         <div className="border-t border-b border-gray-200 py-6 mb-12">
           <div className="flex items-center gap-4">
@@ -209,7 +215,7 @@ export default function NewsDetailPage() {
           </div>
         </div>
 
-        {/* Related News */}
+        {/* Related News - FIXED IMAGE URLS */}
         {relatedNews.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Related News</h2>
@@ -220,10 +226,12 @@ export default function NewsDetailPage() {
                     {item.attributes.image?.data?.attributes?.url && (
                       <div className="relative h-40">
                         <Image
-                          src={`${API_URL}${item.attributes.image.data.attributes.url}`}
+                          // FIXED: Using the full URL directly from Strapi
+                         src={item.attributes.image.data.attributes.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image.data.attributes.url}`}
                           alt={item.attributes.title}
                           fill
                           className="object-cover"
+                          unoptimized={true}
                           sizes="(max-width: 768px) 100vw, 33vw"
                         />
                       </div>

@@ -123,8 +123,7 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-  
-
+    
       {/* Header */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
@@ -169,7 +168,7 @@ export default function NewsPage() {
           </div>
         </div>
 
-        {/* Featured News */}
+        {/* Featured News - FIXED IMAGE URL */}
         {featuredNews && (
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-gray-800 mb-6">Featured Story</h2>
@@ -178,10 +177,12 @@ export default function NewsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2">
                   <div className="relative h-[300px] md:h-full">
                     <Image
-                      src={featuredNews.attributes.image?.data?.attributes?.url ? `${API_URL}${featuredNews.attributes.image.data.attributes.url}` : '/placeholder.jpg'}
+                      // FIXED: Using the full URL directly from Strapi
+                     src={featuredNews.attributes.image?.data?.attributes?.url?.startsWith('http') ? featuredNews.attributes.image.data.attributes.url : `${API_URL}${featuredNews.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
                       alt={featuredNews.attributes.title}
                       fill
                       className="object-cover group-hover:scale-105 transition duration-500"
+                      unoptimized={true}
                     />
                   </div>
                   <div className="p-8 md:p-12">
@@ -205,7 +206,7 @@ export default function NewsPage() {
           </div>
         )}
 
-        {/* News Grid */}
+        {/* News Grid - FIXED IMAGE URLS */}
         <div>
           <h2 className="text-3xl font-bold text-gray-800 mb-8">All News</h2>
           
@@ -219,10 +220,12 @@ export default function NewsPage() {
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group h-full flex flex-col">
                       <div className="relative h-48 overflow-hidden bg-gray-100">
                         <Image
-                          src={item.attributes.image?.data?.attributes?.url ? `${API_URL}${item.attributes.image.data.attributes.url}` : '/placeholder.jpg'}
+                          // FIXED: Using the full URL directly from Strapi
+                         src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
                           alt={item.attributes.title}
                           fill
                           className="object-cover group-hover:scale-110 transition duration-500"
+                          unoptimized={true}
                         />
                         {item.attributes.isFeatured && (
                           <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">

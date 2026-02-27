@@ -21,59 +21,55 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (slug) {
       fetchProduct();
+      fetchFooter();
     }
   }, [slug]);
 
-useEffect(() => {
-  if (slug) {
-    fetchProduct();
-    fetchFooter();
-  }
-}, [slug]);
   const fetchProduct = async () => {
-  try {
-    const response = await axios.get(
-      `${API_URL}/api/products?filters[slug][$eq]=${slug}&populate[category]=*&populate[image]=*&populate[related_products][populate]=image`,
-      { headers: { Authorization: `Bearer ${API_TOKEN}` } }
-    );
-    
-    if (response.data?.data?.[0]) {
-      const productData = response.data.data[0];
-      setProduct(productData);
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/products?filters[slug][$eq]=${slug}&populate[category]=*&populate[image]=*&populate[related_products][populate]=image`,
+        { headers: { Authorization: `Bearer ${API_TOKEN}` } }
+      );
       
-      // Related products are now in productData.attributes.related_products
-      if (productData.attributes.related_products?.data) {
-        setRelatedProducts(productData.attributes.related_products.data);
+      if (response.data?.data?.[0]) {
+        const productData = response.data.data[0];
+        setProduct(productData);
+        
+        if (productData.attributes.related_products?.data) {
+          setRelatedProducts(productData.attributes.related_products.data);
+        }
       }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setLoading(false);
     }
-    setLoading(false);
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    setLoading(false);
-  }
-};
-const fetchFooter = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/site-footer?populate[branchLocations][populate][0]=phones&populate[branchLocations][populate][1]=emails&populate[footerLinks]=*&populate[socialPlatforms]=*`, {
-      headers: { Authorization: `Bearer ${API_TOKEN}` }
-    });
-    if (response.data?.data) setFooter(response.data.data);
-  } catch (error) {
-    console.error('Error fetching footer:', error);
-  }
-};
+  };
 
-// Helper to extract text from rich text
-const extractText = (richText) => {
-  if (!richText) return '';
-  if (typeof richText === 'string') return richText;
-  if (Array.isArray(richText)) {
-    return richText.map(block => 
-      block.children?.map(child => child.text).join(' ') || ''
-    ).join(' ');
-  }
-  return '';
-};
+  const fetchFooter = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/site-footer?populate[branchLocations][populate][0]=phones&populate[branchLocations][populate][1]=emails&populate[footerLinks]=*&populate[socialPlatforms]=*`, {
+        headers: { Authorization: `Bearer ${API_TOKEN}` }
+      });
+      if (response.data?.data) setFooter(response.data.data);
+    } catch (error) {
+      console.error('Error fetching footer:', error);
+    }
+  };
+
+  // Helper to extract text from rich text
+  const extractText = (richText) => {
+    if (!richText) return '';
+    if (typeof richText === 'string') return richText;
+    if (Array.isArray(richText)) {
+      return richText.map(block => 
+        block.children?.map(child => child.text).join(' ') || ''
+      ).join(' ');
+    }
+    return '';
+  };
+
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   if (!product) return (
@@ -89,7 +85,7 @@ const extractText = (richText) => {
 
   return (
     <div className="min-h-screen bg-white">
-
+      
 
       {/* Breadcrumb */}
       <div className="bg-gray-50 py-4 border-b">
@@ -99,7 +95,7 @@ const extractText = (richText) => {
             <span className="mx-2">›</span>
             <Link href="/products" className="hover:text-[#FFFF00]">Products</Link>
             <span className="mx-2">›</span>
-            <Link href={`/products/${category}`} className="hover:text-[#FFFF00] capitalize">{category.replace(/-/g, ' ')}</Link>
+            <Link href={`/products/${category}`} className="hover:text-[#FFFF00] capitalize">{category?.replace(/-/g, ' ') || ''}</Link>
             <span className="mx-2">›</span>
             <span className="text-gray-900 font-medium">{product.attributes.name}</span>
           </div>
@@ -115,10 +111,13 @@ const extractText = (richText) => {
             <div className="relative h-[400px] w-full">
               {product.attributes.image?.data?.attributes?.url ? (
                 <Image
-                  src={`${API_URL}${product.attributes.image.data.attributes.url}`}
+                  // FIXED: Using the full URL directly from Strapi
+                  src={product.attributes.image.data.attributes.url?.startsWith('http') ? product.attributes.image.data.attributes.url : `${API_URL}${product.attributes.image.data.attributes.url}`}
+
                   alt={product.attributes.name}
                   fill
                   className="object-contain"
+                  unoptimized={true}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -140,8 +139,8 @@ const extractText = (richText) => {
 
             <div className="prose max-w-none mb-8">
               <p className="text-gray-700 leading-relaxed">
-  {extractText(product.attributes.description)}
-</p>
+                {extractText(product.attributes.description)}
+              </p>
             </div>
 
             <Link
@@ -159,15 +158,17 @@ const extractText = (richText) => {
             <h2 className="text-3xl font-bold text-gray-800 mb-8">Related Products</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((item) => (
-                <Link key={item.id} href={`/products/${item.attributes.category?.data?.attributes?.slug}/${item.attributes.slug}`}>
+                <Link key={item.id} href={`/products/${item.attributes.category?.data?.attributes?.slug || 'uncategorized'}/${item.attributes.slug}`}>
                   <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer">
                     <div className="relative h-48 bg-gray-50">
                       {item.attributes.image?.data?.attributes?.url ? (
                         <Image
-                          src={`${API_URL}${item.attributes.image.data.attributes.url}`}
+                          // FIXED: Using the full URL directly from Strapi
+                          src={item.attributes.image.data.attributes.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image.data.attributes.url}`}
                           alt={item.attributes.name}
                           fill
                           className="object-contain p-4"
+                          unoptimized={true}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">

@@ -113,7 +113,7 @@ export default function ProductsPage() {
 
     setFilteredProducts(filtered);
     setCurrentPage(1);
-    setNoResults(false);
+    setNoResults(filtered.length === 0);
   };
 
   useEffect(() => {
@@ -129,8 +129,7 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      
-
+     
       {/* Header */}
       <div className="bg-gradient-to-r from-[#FFFF00] to-yellow-300 py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
@@ -231,15 +230,17 @@ export default function ProductsPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentProducts.map((product) => (
-                <Link key={product.id} href={`/products/${product.attributes.category?.data?.attributes?.slug}/${product.attributes.slug}`}>
+                <Link key={product.id} href={`/products/${product.attributes.category?.data?.attributes?.slug || 'uncategorized'}/${product.attributes.slug}`}>
                   <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group">
                     <div className="relative h-64 overflow-hidden bg-gray-100">
                       {product.attributes.image?.data?.attributes?.url ? (
                         <Image
-                          src={`${API_URL}${product.attributes.image.data.attributes.url}`}
+                          // FIXED: Using the full URL directly from Strapi
+                        src={product.attributes.image.data.attributes.url?.startsWith('http') ? product.attributes.image.data.attributes.url : `${API_URL}${product.attributes.image.data.attributes.url}`}
                           alt={product.attributes.name}
                           fill
                           className="object-contain p-4 group-hover:scale-105 transition duration-500"
+                          unoptimized={true}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -257,7 +258,7 @@ export default function ProductsPage() {
                         {product.attributes.name}
                       </h3>
                       <p className="text-gray-600 text-sm mb-3">
-                        {product.attributes.category?.data?.attributes?.name}
+                        {product.attributes.category?.data?.attributes?.name || 'Uncategorized'}
                       </p>
                       <div className="inline-flex items-center text-[#FFFF00] font-semibold text-sm">
                         View Product

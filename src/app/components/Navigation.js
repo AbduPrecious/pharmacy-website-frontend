@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import MobileMenu from './MobileMenu';
@@ -124,25 +125,33 @@ export default function Navigation() {
 
       {/* MAIN NAVIGATION */}
       <nav className={`bg-white border-b border-gray-200 transition-all duration-300 ${
-        isScrolled ? 'fixed top-0 left-0 right-0 z-50 shadow-md py-3' : 'py-4'
+        isScrolled ? 'fixed top-0 left-0 right-0 z-50 shadow-md py-2' : 'py-3'
       }`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Logo */}
+            {/* Logo - BIGGER SIZE */}
             <div className="flex items-center">
               {headerInfo?.attributes?.logo?.data?.attributes?.url ? (
-                <img 
-                  src={`${API_URL}${headerInfo.attributes.logo.data.attributes.url}`} 
-                  alt="Droga Pharma" 
-                  className="h-10 w-auto"
-                />
+                <div className="relative" style={{ height: '70px', width: 'auto' }}>
+                  <Image 
+                    src={headerInfo.attributes.logo.data.attributes.url.startsWith('http') 
+                      ? headerInfo.attributes.logo.data.attributes.url 
+                      : `${API_URL}${headerInfo.attributes.logo.data.attributes.url}`}
+                    alt="Droga Pharma" 
+                    width={200}
+                    height={70}
+                    className="h-[70px] w-auto object-contain"
+                    unoptimized={true}
+                    priority
+                  />
+                </div>
               ) : (
-                <div className="text-2xl font-bold">DROGA</div>
+                <div className="text-3xl font-bold">DROGA</div>
               )}
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden md:flex items-center space-x-8">
               {getMainMenus().map((menu) => {
                 const dropdownItems = getDropdownItems(menu.id);
                 return (
@@ -153,7 +162,7 @@ export default function Navigation() {
                           <div className="flex items-center">
                             <Link 
                               href="/careers"
-                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base"
+                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
                             >
                               {menu.attributes.title}
                             </Link>
@@ -170,7 +179,7 @@ export default function Navigation() {
                           <div className="flex items-center">
                             <Link 
                               href={menu.attributes.url} 
-                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base"
+                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
                             >
                               {menu.attributes.title}
                             </Link>
@@ -184,7 +193,7 @@ export default function Navigation() {
                               <Link 
                                 key={item.id}
                                 href={item.attributes.url}
-                                className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-[#FFFF00] hover:text-gray-900"
+                                className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-[#FFFF00] hover:text-gray-900 transition-colors"
                               >
                                 {item.attributes.title}
                               </Link>
@@ -193,7 +202,10 @@ export default function Navigation() {
                         </div>
                       </div>
                     ) : (
-                      <Link href={menu.attributes.url} className="text-gray-700 hover:text-[#FFFF00] font-medium text-base">
+                      <Link 
+                        href={menu.attributes.url} 
+                        className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
+                      >
                         {menu.attributes.title}
                       </Link>
                     )}
@@ -207,7 +219,6 @@ export default function Navigation() {
               <MobileMenu 
                 menus={getMainMenus()} 
                 getDropdownItems={getDropdownItems}
-                API_URL={API_URL}
               />
             </div>
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Image from 'next/image';
 import Link from 'next/link';
-import Navigation from './components/Navigation';  // 👈 ADD THIS LINE
+import Navigation from './components/Navigation';
 
 export default function Home() {
   const [menus, setMenus] = useState([]);
@@ -17,8 +17,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // ... rest of your code remains exactly the same ...
 
   // API functions
   const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
@@ -235,90 +233,93 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      
-      
+   
 
       {/* Add padding when navbar is fixed */}
       {isScrolled && <div className="pt-[80px]"></div>}
 
       {/* SLIDESHOW SECTION */}
-{slideshow?.attributes?.slides?.length > 0 && (
-  <div className="relative w-full h-[300px] md:h-[500px] overflow-hidden">
-    <div 
-      className="flex transition-transform duration-700 ease-in-out h-full" 
-      style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-    >
-      {slideshow.attributes.slides.map((slide, index) => (
-        <div key={index} className="min-w-full h-full">
-          <div className="flex flex-col md:flex-row h-full">
-            {/* Text section - full width on mobile, half on desktop */}
-            <div className="w-full md:w-1/2 bg-black h-[200px] md:h-full flex items-center justify-center p-4 md:p-12">
-              <div className="text-white text-center md:text-left">
-                <h2 className="text-xl md:text-4xl font-bold mb-2 md:mb-6 text-[#FFFF00]">{slide.title}</h2>
-                <p className="text-xs md:text-lg mb-2 md:mb-8 line-clamp-3 md:line-clamp-none">
-                  {slide.description.map(block => 
-                    block.children?.map(child => child.text).join(' ') || ''
-                  ).join(' ')}
-                </p>
-                {slide.buttonText && (
-                  <span className="bg-[#FFFF00] text-gray-800 px-3 py-1 md:px-6 md:py-2 rounded-full text-xs md:text-base font-semibold">
-                    {slide.buttonText}
-                  </span>
-                )}
+      {slideshow?.attributes?.slides?.length > 0 && (
+        <div className="relative w-full h-[300px] md:h-[500px] overflow-hidden">
+          <div 
+            className="flex transition-transform duration-700 ease-in-out h-full" 
+            style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+          >
+            {slideshow.attributes.slides.map((slide, index) => (
+              <div key={index} className="min-w-full h-full">
+                <div className="flex flex-col md:flex-row h-full">
+                  {/* Text section - full width on mobile, half on desktop */}
+                  <div className="w-full md:w-1/2 bg-black h-[200px] md:h-full flex items-center justify-center p-4 md:p-12">
+                    <div className="text-white text-center md:text-left">
+                      <h2 className="text-xl md:text-4xl font-bold mb-2 md:mb-6 text-[#FFFF00]">{slide.title}</h2>
+                      <p className="text-xs md:text-lg mb-2 md:mb-8 line-clamp-3 md:line-clamp-none">
+                        {slide.description?.map(block => 
+                          block.children?.map(child => child.text).join(' ') || ''
+                        ).join(' ')}
+                      </p>
+                      {slide.buttonText && (
+                        <span className="bg-[#FFFF00] text-gray-800 px-3 py-1 md:px-6 md:py-2 rounded-full text-xs md:text-base font-semibold">
+                          {slide.buttonText}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Image section - full width on mobile, half on desktop */}
+                  <div className="w-full md:w-1/2 h-[200px] md:h-full relative bg-gray-900">
+                    <Image
+                      // FIXED: Using the full URL directly from Strapi
+               src={slide.image?.data?.attributes?.url?.startsWith('http') ? slide.image.data.attributes.url : `${API_URL}${slide.image?.data?.attributes?.url}` || '/placeholder.jpg'}
+
+                      alt={slide.title}
+                      fill
+                      className="object-cover"
+                      priority={index === 0}
+                      quality={100}
+                      unoptimized={true}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-            {/* Image section - full width on mobile, half on desktop */}
-            <div className="w-full md:w-1/2 h-[200px] md:h-full relative bg-gray-900">
-              <Image
-                src={slide.image?.data?.attributes?.url ? `${API_URL}${slide.image.data.attributes.url}` : '/placeholder.jpg'}
-                alt={slide.title}
-                fill
-                className="object-cover"
-                priority={index === 0}
-                quality={100}
+            ))}
+          </div>
+          {/* Navigation Arrows - hide on mobile */}
+          <button onClick={prevSlide} className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition z-20">❮</button>
+          <button onClick={nextSlide} className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition z-20">❯</button>
+
+          {/* Dots - visible on all devices */}
+          <div className="absolute bottom-2 md:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 md:space-x-3 z-20">
+            {slideshow.attributes.slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition ${
+                  currentSlide === index ? 'bg-[#FFFF00] w-4 md:w-6' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                }`}
               />
-            </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
-    {/* Navigation Arrows - hide on mobile */}
-    <button onClick={prevSlide} className="hidden md:block absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition z-20">❮</button>
-    <button onClick={nextSlide} className="hidden md:block absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition z-20">❯</button>
-
-    {/* Dots - visible on all devices */}
-    <div className="absolute bottom-2 md:bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 md:space-x-3 z-20">
-      {slideshow.attributes.slides.map((_, index) => (
-        <button
-          key={index}
-          onClick={() => setCurrentSlide(index)}
-          className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition ${
-            currentSlide === index ? 'bg-[#FFFF00] w-4 md:w-6' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
-          }`}
-        />
-      ))}
-    </div>
-  </div>
-)}
+      )}
 
       {/* PRODUCTS SECTION - White Background */}
-<div className="bg-white py-16">
-  <div className="max-w-7xl mx-auto px-4 text-center">
-    <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Products</h2>
-    <div className="w-24 h-1 bg-[#FFFF00] mx-auto mb-8"></div>
-    <p className="text-gray-600 max-w-3xl mx-auto mb-10">
-      We offer a wide range of pharmaceutical products, medical equipment, and healthcare solutions to meet your needs.
-    </p>
-    
-    {/* BROWSE PRODUCTS BUTTON with icon */}
-<Link href="/products">
-  <button className="group bg-[#FFFF00] text-gray-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-400 transition transform hover:scale-105 shadow-md inline-flex items-center gap-2">
-    Browse All Products
-    <span className="group-hover:translate-x-1 transition-transform">→</span>
-  </button>
-</Link>
-  </div>
-</div>
+      <div className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">Our Products</h2>
+          <div className="w-24 h-1 bg-[#FFFF00] mx-auto mb-8"></div>
+          <p className="text-gray-600 max-w-3xl mx-auto mb-10">
+            We offer a wide range of pharmaceutical products, medical equipment, and healthcare solutions to meet your needs.
+          </p>
+          
+          {/* BROWSE PRODUCTS BUTTON with icon */}
+          <Link href="/products">
+            <button className="group bg-[#FFFF00] text-gray-800 px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-400 transition transform hover:scale-105 shadow-md inline-flex items-center gap-2">
+              Browse All Products
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </button>
+          </Link>
+        </div>
+      </div>
+
       {/* WELCOME SECTION - Dynamic from Strapi */}
       {welcome && (
         <div className="bg-[#FFFF00] py-16">
@@ -328,17 +329,21 @@ export default function Home() {
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">{welcome.attributes.title}</h2>
                 <p className="text-gray-800 text-lg leading-relaxed mb-6">{extractText(welcome.attributes.description)}</p>
                 <Link href="/about">
-  <button className="bg-white text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition shadow-md">
-    {welcome.attributes.buttonText || 'Learn More'}
-  </button>
-</Link>
+                  <button className="bg-white text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition shadow-md">
+                    {welcome.attributes.buttonText || 'Learn More'}
+                  </button>
+                </Link>
               </div>
               <div className="w-full md:w-1/2">
                 <div className="h-[550px] rounded-lg overflow-hidden shadow-xl">
-                  <img 
-                    src={welcome.attributes.image?.data?.attributes?.url ? `${API_URL}${welcome.attributes.image.data.attributes.url}` : '/placeholder.jpg'}
+                  <Image 
+                    // FIXED: Using the full URL directly from Strapi
+                   src={welcome.attributes.image?.data?.attributes?.url?.startsWith('http') ? welcome.attributes.image.data.attributes.url : `${API_URL}${welcome.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
                     alt="Welcome"
+                    width={800}
+                    height={550}
                     className="w-full h-full object-contain bg-gray-100"
+                    unoptimized={true}
                   />
                 </div>
                 {welcome.attributes.imageCaption && (
@@ -364,10 +369,14 @@ export default function Home() {
               {news.slice(0, 6).map((item) => (
                 <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
                   <div className="relative h-48">
-                    <img 
-                      src={item.attributes.image?.data?.attributes?.url ? `${API_URL}${item.attributes.image.data.attributes.url}` : '/placeholder.jpg'}
+                    <Image 
+                      // FIXED: Using the full URL directly from Strapi
+                     src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
+
                       alt={item.attributes.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized={true}
                     />
                     <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-bold">NEWS</div>
                   </div>
@@ -375,18 +384,18 @@ export default function Home() {
                     <h3 className="text-xl font-bold text-gray-800 mb-2">{item.attributes.title}</h3>
                     <p className="text-gray-600 mb-4 line-clamp-3">{extractText(item.attributes.description)}</p>
                     <Link href={`/news/${item.id}`} className="text-[#FFFF00] font-semibold hover:underline">
-  Read More →
-</Link>
+                      Read More →
+                    </Link>
                   </div>
                 </div>
               ))}
             </div>
             <div className="text-center mt-12">
               <Link href="/news">
-  <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
-    View All News
-  </button>
-</Link>
+                <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
+                  View All News
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -408,10 +417,14 @@ export default function Home() {
               {clients.map((client) => (
                 <div key={client.id} className="mx-8 flex items-center justify-center">
                   <div className="w-40 h-32 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm border border-gray-100">
-                    <img 
-                      src={client.attributes.logo?.data?.attributes?.url ? `${API_URL}${client.attributes.logo.data.attributes.url}` : '/placeholder.png'}
+                    <Image 
+                      // FIXED: Using the full URL directly from Strapi
+                     src={client.attributes.logo?.data?.attributes?.url?.startsWith('http') ? client.attributes.logo.data.attributes.url : `${API_URL}${client.attributes.logo?.data?.attributes?.url}` || '/placeholder.png'}
                       alt={client.attributes.name}
+                      width={160}
+                      height={128}
                       className="max-w-full max-h-full object-contain"
+                      unoptimized={true}
                     />
                   </div>
                 </div>
@@ -421,10 +434,13 @@ export default function Home() {
               {clients.map((client) => (
                 <div key={`dup-${client.id}`} className="mx-8 flex items-center justify-center">
                   <div className="w-40 h-32 bg-white rounded-lg flex items-center justify-center p-2 shadow-sm border border-gray-100">
-                    <img 
-                      src={client.attributes.logo?.data?.attributes?.url ? `${API_URL}${client.attributes.logo.data.attributes.url}` : '/placeholder.png'}
+                    <Image 
+                     src={`${API_URL}${client.attributes.logo?.data?.attributes?.url}` || '/placeholder.png'}
                       alt={client.attributes.name}
+                      width={160}
+                      height={128}
                       className="max-w-full max-h-full object-contain"
+                      unoptimized={true}
                     />
                   </div>
                 </div>

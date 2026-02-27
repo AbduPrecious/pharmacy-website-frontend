@@ -8,6 +8,11 @@ const nextConfig = {
         port: '1337',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'balanced-activity-163f4ebd43.media.strapiapp.com',
+        pathname: '/**',
+      },
     ],
   },
 }
