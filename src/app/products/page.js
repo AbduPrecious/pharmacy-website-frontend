@@ -195,18 +195,18 @@ export default function ProductsPage() {
         )}
 
         {/* Products Grid or No Results Message */}
-        {currentProducts.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-2xl">
-            <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Available</h2>
-            <p className="text-gray-600 text-lg mb-4">
-              {searchQuery 
-  ? `No products found matching "${searchQuery}"`
-  : 'No products found in this category'}
-            </p>
-            <p className="text-gray-500 mb-8">Try searching with different keywords or browse our categories.</p>
+       {currentProducts.length === 0 ? (
+  <div className="text-center py-16 bg-gray-50 rounded-2xl">
+    <svg className="w-24 h-24 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Available</h2>
+    <p className="text-gray-600 text-lg mb-4">
+      {searchQuery 
+        ? `No products found matching "${searchQuery}"`
+        : 'No products found in this category'}
+    </p>
+    <p className="text-gray-500 mb-8">Try searching with different keywords or browse our categories.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 href="/products" 
