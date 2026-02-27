@@ -292,7 +292,7 @@ function ProductsContent() {
 export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
+     
       <Suspense fallback={<div className="p-8 text-center">Loading products...</div>}>
         <ProductsContent />
       </Suspense>
