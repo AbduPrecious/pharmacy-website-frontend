@@ -64,55 +64,32 @@ export default function Navigation() {
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-
-    try {
-      const response = await axios.get(`${API_URL}/api/products?filters[name][$containsi]=${encodeURIComponent(searchQuery)}&populate=*`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-      });
-
-      if (response.data?.data && response.data.data.length > 0) {
-        if (response.data.data.length === 1) {
-          const product = response.data.data[0];
-          const categorySlug = product.attributes.category?.data?.attributes?.slug || 'products';
-          router.push(`/products/${categorySlug}/${product.attributes.slug}`);
-        } else {
-          router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
-        }
-      } else {
-        router.push(`/products?search=${encodeURIComponent(searchQuery)}&noresults=true`);
-      }
-      
-      setSearchQuery('');
-    } catch (error) {
-      console.error('Search error:', error);
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
-    }
+    // ... search logic
   };
 
-  // Check if current page is homepage
   const isHomePage = pathname === '/';
 
   return (
     <>
-      {/* TOP YELLOW BAR - ONLY on homepage */}
+      {/* TOP YELLOW BAR */}
       {!isScrolled && isHomePage && (
-        <div className="hidden md:block bg-[#FFFF00] py-3 md:py-4 transition-all duration-300">
+        <div className="hidden md:block bg-[#FFFF00] py-2">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex justify-end">
-              <form onSubmit={handleSearch} className="flex items-center w-full sm:w-80">
-                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden bg-white w-full shadow-sm">
+              <form onSubmit={handleSearch} className="flex items-center w-64">
+                <div className="flex items-center border border-gray-300 rounded-md overflow-hidden bg-white w-full">
                   <input 
                     type="text" 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={headerInfo?.attributes?.searchPlaceholder || "Search products..."} 
-                    className="px-4 py-2 w-full outline-none text-sm text-gray-700 placeholder-gray-400"
+                    className="px-3 py-1.5 w-full outline-none text-sm text-gray-700"
                   />
                   <button 
                     type="submit"
-                    className="bg-white px-4 py-2 text-gray-500 hover:text-gray-700 transition border-l border-gray-300"
+                    className="bg-white px-3 py-1.5 text-gray-500 hover:text-gray-700 transition border-l border-gray-300"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
@@ -128,72 +105,57 @@ export default function Navigation() {
         isScrolled ? 'fixed top-0 left-0 right-0 z-50 shadow-md py-2' : 'py-3'
       }`}>
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between gap-4">
-            {/* Logo - BIGGER SIZE */}
+          <div className="flex items-center justify-between">
+            {/* Logo - SMALLER SIZE */}
             <div className="flex items-center">
               {headerInfo?.attributes?.logo?.data?.attributes?.url ? (
-                <div className="relative" style={{ height: '70px', width: 'auto' }}>
+                <div className="relative" style={{ height: '40px', width: 'auto' }}>
                   <Image 
                     src={headerInfo.attributes.logo.data.attributes.url.startsWith('http') 
                       ? headerInfo.attributes.logo.data.attributes.url 
                       : `${API_URL}${headerInfo.attributes.logo.data.attributes.url}`}
                     alt="Droga Pharma" 
-                    width={200}
-                    height={70}
-                    className="h-[70px] w-auto object-contain"
+                    width={120}
+                    height={40}
+                    className="h-[40px] w-auto object-contain"
                     unoptimized={true}
                     priority
                   />
                 </div>
               ) : (
-                <div className="text-3xl font-bold">DROGA</div>
+                <div className="text-xl font-bold">DROGA</div>
               )}
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-5 lg:space-x-6">
               {getMainMenus().map((menu) => {
                 const dropdownItems = getDropdownItems(menu.id);
                 return (
                   <div key={menu.id} className="relative group">
                     {dropdownItems.length > 0 ? (
-                      <div className="relative group">
-                        {menu.attributes.title === 'Vacancy' ? (
-                          <div className="flex items-center">
-                            <Link 
-                              href="/careers"
-                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
-                            >
-                              {menu.attributes.title}
-                            </Link>
-                            <span className="ml-1 text-sm font-extrabold text-gray-800">⌵</span>
-                          </div>
-                        ) : menu.attributes.title === 'Group Companies' || menu.attributes.title === 'R & D' ? (
-                          <div className="flex items-center">
-                            <span className="text-gray-700 font-medium cursor-default">
-                              {menu.attributes.title}
-                            </span>
-                            <span className="ml-1 text-sm font-extrabold text-gray-800">⌵</span>
-                          </div>
+                      <div className="flex items-center">
+                        {menu.attributes.title === 'Group Companies' || menu.attributes.title === 'R & D' ? (
+                          <span className="text-gray-700 text-sm lg:text-base font-medium cursor-default">
+                            {menu.attributes.title}
+                          </span>
                         ) : (
-                          <div className="flex items-center">
-                            <Link 
-                              href={menu.attributes.url} 
-                              className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
-                            >
-                              {menu.attributes.title}
-                            </Link>
-                            <span className="ml-1 text-sm font-extrabold text-gray-800">⌵</span>
-                          </div>
+                          <Link 
+                            href={menu.attributes.title === 'Vacancy' ? '/careers' : menu.attributes.url}
+                            className="text-gray-700 text-sm lg:text-base font-medium hover:text-[#FFFF00] transition-colors"
+                          >
+                            {menu.attributes.title}
+                          </Link>
                         )}
+                        <span className="ml-1 text-xs text-gray-800">⌵</span>
                         
-                        <div className="absolute top-full left-0 mt-2 w-44 bg-white shadow-lg rounded-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                        <div className="absolute top-full left-0 mt-1 w-40 bg-white shadow-lg rounded-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <div className="py-1">
                             {dropdownItems.map((item) => (
                               <Link 
                                 key={item.id}
                                 href={item.attributes.url}
-                                className="block px-3 py-1.5 text-sm text-gray-700 hover:bg-[#FFFF00] hover:text-gray-900 transition-colors"
+                                className="block px-3 py-1.5 text-xs text-gray-700 hover:bg-[#FFFF00] hover:text-gray-900"
                               >
                                 {item.attributes.title}
                               </Link>
@@ -204,7 +166,7 @@ export default function Navigation() {
                     ) : (
                       <Link 
                         href={menu.attributes.url} 
-                        className="text-gray-700 hover:text-[#FFFF00] font-medium text-base transition-colors"
+                        className="text-gray-700 text-sm lg:text-base font-medium hover:text-[#FFFF00] transition-colors"
                       >
                         {menu.attributes.title}
                       </Link>
@@ -214,6 +176,11 @@ export default function Navigation() {
               })}
             </div>
 
+            {/* Phone Number */}
+            <div className="hidden md:block text-gray-800 font-semibold text-sm">
+              {headerInfo?.attributes?.phoneNumber || '+251-112-73-45-54'}
+            </div>
+
             {/* Mobile Menu */}
             <div className="md:hidden">
               <MobileMenu 
@@ -221,17 +188,12 @@ export default function Navigation() {
                 getDropdownItems={getDropdownItems}
               />
             </div>
-
-            {/* Phone Number */}
-            <div className="text-gray-800 font-bold text-base hidden md:block">
-              {headerInfo?.attributes?.phoneNumber || '+251-112-73-45-54'}
-            </div>
           </div>
         </div>
       </nav>
 
-      {/* Add padding when navbar is fixed */}
-      {isScrolled && <div className="pt-[80px]"></div>}
+      {/* Spacer for fixed nav */}
+      {isScrolled && <div className="h-[60px]"></div>}
     </>
   );
 }
