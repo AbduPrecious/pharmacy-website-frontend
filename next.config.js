@@ -13,6 +13,11 @@ const nextConfig = {
         hostname: 'balanced-activity-163f4ebd43.media.strapiapp.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/djugmg9qr/**',
+      },
     ],
   },
 }
