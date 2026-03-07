@@ -206,91 +206,95 @@ export default function NewsPage() {
           </div>
         )}
 
-        {/* News Grid - FIXED IMAGE URLS */}
-        <div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-8">All News</h2>
-          
-          {filteredNews.length === 0 ? (
-            <p className="text-center text-gray-600 py-12">No news articles found.</p>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {currentItems.map((item) => (
-                  <Link key={item.id} href={`/news/${item.id}`}>
-                    <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group h-full flex flex-col">
-                      <div className="relative h-48 overflow-hidden bg-gray-100">
-                        <Image
-                          // FIXED: Using the full URL directly from Strapi
-                         src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
-                          alt={item.attributes.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition duration-500"
-                          unoptimized={true}
-                        />
-                        {item.attributes.isFeatured && (
-                          <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
-                            Featured
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <div className="text-sm text-gray-500 mb-2">
-                          {formatDate(item.attributes.date)}
-                        </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-3 group-hover:text-[#FFFF00] transition line-clamp-2">
-                          {item.attributes.title}
-                        </h3>
-                        <p className="text-gray-600 mb-4 line-clamp-3 flex-1">
-                          {extractText(item.attributes.description)}
-                        </p>
-                        <div className="inline-flex items-center text-[#FFFF00] font-semibold text-sm">
-                          Read More
-                          <span className="ml-1">→</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+     {/* News Grid */}
+<div>
+  <h2 className="text-3xl font-bold text-gray-800 mb-8">All News</h2>
+  
+  {filteredNews.length === 0 ? (
+    <p className="text-center text-gray-600 py-12">No news articles found.</p>
+  ) : (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {currentItems.map((item) => (
+          <Link key={item.id} href={`/news/${item.id}`}>
+            <div 
+              className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full group cursor-pointer"
+            >
+              <div className="relative h-48 overflow-hidden bg-gray-100 flex-shrink-0">
+                <Image
+                  src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
+                  alt={item.attributes.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  unoptimized={true}
+                />
+                {item.attributes.isFeatured && (
+                  <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold z-10">
+                    Featured
+                  </div>
+                )}
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-12 gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
-                  >
-                    Previous
-                  </button>
-                  
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg transition text-gray-900 ${
-                        currentPage === i + 1
-                          ? 'bg-[#FFFF00] font-semibold'
-                          : 'border border-gray-300 hover:bg-gray-50 bg-white'
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
-                  >
-                    Next
-                  </button>
+              <div className="p-6 flex-1 flex flex-col">
+                <div className="text-sm text-gray-500 mb-2">
+                  {formatDate(item.attributes.date)}
                 </div>
-              )}
-            </>
-          )}
-        </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-[#FFFF00] transition-colors">
+                  {item.attributes.title}
+                </h3>
+                <p className="text-gray-600 mb-4 line-clamp-3 flex-1">
+                  {extractText(item.attributes.description)}
+                </p>
+                
+                {/* SHORT BUTTON */}
+                <div className="mt-auto pt-4">
+                  <span className="inline-block bg-[#FFFF00] text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 hover:shadow-md hover:scale-105">
+                    Read More
+                  </span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
 
+      {/* Pagination (keep as is) */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-12 gap-2">
+          {/* ... your existing pagination code ... */}
+           <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
+          >
+            Previous
+          </button>
+          
+          {[...Array(totalPages)].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-4 py-2 rounded-lg transition text-gray-900 ${
+                currentPage === i + 1
+                  ? 'bg-[#FFFF00] font-semibold'
+                  : 'border border-gray-300 hover:bg-gray-50 bg-white'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </>
+  )}
+</div>
         {/* Newsletter Signup - Mobile Optimized */}
         <div className="mt-16 bg-gray-50 rounded-2xl p-6 md:p-12 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">Stay Updated</h2>

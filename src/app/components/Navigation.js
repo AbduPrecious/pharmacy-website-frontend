@@ -62,11 +62,35 @@ export default function Navigation() {
   };
 
   const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    // ... search logic
-  };
+  e.preventDefault();
+  if (!searchQuery.trim()) return;
 
+  try {
+    const response = await axios.get(`${API_URL}/api/products?filters[name][$containsi]=${encodeURIComponent(searchQuery)}&populate=*`, {
+      headers: { Authorization: `Bearer ${API_TOKEN}` }
+    });
+
+    if (response.data?.data && response.data.data.length > 0) {
+      // If only one product found, go directly to its page
+      if (response.data.data.length === 1) {
+        const product = response.data.data[0];
+        const categorySlug = product.attributes.category?.data?.attributes?.slug || 'products';
+        router.push(`/products/${categorySlug}/${product.attributes.slug}`);
+      } else {
+        // Multiple products found - go to products page with search query
+        router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+      }
+    } else {
+      // No products found
+      router.push(`/products?search=${encodeURIComponent(searchQuery)}&noresults=true`);
+    }
+    
+    setSearchQuery('');
+  } catch (error) {
+    console.error('Search error:', error);
+    router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+  }
+};
   const isHomePage = pathname === '/';
 
   return (
@@ -106,26 +130,26 @@ export default function Navigation() {
       }`}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            {/* Logo - SMALLER SIZE */}
-            <div className="flex items-center">
-              {headerInfo?.attributes?.logo?.data?.attributes?.url ? (
-                <div className="relative" style={{ height: '40px', width: 'auto' }}>
-                  <Image 
-                    src={headerInfo.attributes.logo.data.attributes.url.startsWith('http') 
-                      ? headerInfo.attributes.logo.data.attributes.url 
-                      : `${API_URL}${headerInfo.attributes.logo.data.attributes.url}`}
-                    alt="Droga Pharma" 
-                    width={120}
-                    height={40}
-                    className="h-[40px] w-auto object-contain"
-                    unoptimized={true}
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className="text-xl font-bold">DROGA</div>
-              )}
-            </div>
+            {/* Logo - BIGGER SIZE */}
+<div className="flex items-center">
+  {headerInfo?.attributes?.logo?.data?.attributes?.url ? (
+    <div className="relative" style={{ height: '70px', width: 'auto' }}>
+      <Image 
+        src={headerInfo.attributes.logo.data.attributes.url.startsWith('http') 
+          ? headerInfo.attributes.logo.data.attributes.url 
+          : `${API_URL}${headerInfo.attributes.logo.data.attributes.url}`}
+        alt="Droga Pharma" 
+        width={210}
+        height={70}
+        className="h-[70px] w-auto object-contain"
+        unoptimized={true}
+        priority
+      />
+    </div>
+  ) : (
+    <div className="text-3xl font-bold">DROGA</div>
+  )}
+</div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-5 lg:space-x-6">

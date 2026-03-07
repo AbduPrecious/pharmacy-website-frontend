@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import axios from 'axios';
-import { getAboutUs } from '../../../lib/strapi';
 import Navigation from '../components/Navigation';
 
 export default function AboutPage() {
@@ -20,11 +19,19 @@ export default function AboutPage() {
   }, []);
 
   const fetchAboutData = async () => {
-    const data = await getAboutUs();
-    if (data?.data) {
-      setAboutData(data.data);
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/about-us?populate[values][populate]=icon&populate[groupCompanies][populate]=logo&populate[partners][populate]=logo&populate[isoCertificates][populate]=image&populate[welcomeImage]=*&populate[missionIcon]=*&populate[visionIcon]=*&populate[leadersImage]=*&populate[leaderFollowImage]=*&populate[milestoneImage]=*&populate[qualityImage]=*`,
+        { headers: { Authorization: `Bearer ${API_TOKEN}` } }
+      );
+      if (response.data?.data) {
+        setAboutData(response.data.data);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching about data:', error);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchFooter = async () => {
@@ -38,7 +45,6 @@ export default function AboutPage() {
     }
   };
 
-  // Helper to extract text from rich text
   const extractText = (richText) => {
     if (!richText) return '';
     if (typeof richText === 'string') return richText;
@@ -55,6 +61,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       
+
       {/* Header with Breadcrumb */}
       <div className="bg-[#FFFF00] py-12">
         <div className="max-w-7xl mx-auto px-4">
@@ -87,15 +94,13 @@ export default function AboutPage() {
                 </p>
               </div>
               <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
-                <Image
-                  // FIXED: Using the full URL directly from Strapi
-                 src={aboutData.attributes.welcomeImage?.data?.attributes?.url?.startsWith('http') ? aboutData.attributes.welcomeImage.data.attributes.url : `${API_URL}${aboutData.attributes.welcomeImage?.data?.attributes?.url}` || '/placeholder.jpg'}
-
-                  alt="Welcome"
-                  fill
-                  className="object-cover"
-                  unoptimized={true}
-                />
+                {aboutData.attributes.welcomeImage?.data?.attributes?.url && (
+                  <img
+                    src={aboutData.attributes.welcomeImage.data.attributes.url}
+                    alt="Welcome"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -109,14 +114,13 @@ export default function AboutPage() {
               {aboutData.attributes.values.map((value, index) => (
                 <div key={index} className="bg-gray-50 p-6 rounded-lg text-center hover:shadow-lg transition border-t-4 border-[#FFFF00]">
                   <div className="relative w-20 h-20 mx-auto mb-4">
-                    <Image
-                      // FIXED: Using the full URL directly from Strapi
-                     src={value.icon?.data?.attributes?.url?.startsWith('http') ? value.icon.data.attributes.url : `${API_URL}${value.icon?.data?.attributes?.url}` || '/placeholder.jpg'}
-                      alt={value.title}
-                      fill
-                      className="object-contain"
-                      unoptimized={true}
-                    />
+                    {value.icon?.data?.attributes?.url && (
+                      <img
+                        src={value.icon.data.attributes.url}
+                        alt={value.title}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
                   </div>
                   <h3 className="text-xl font-bold text-gray-800 mb-3">{value.title}</h3>
                   <p className="text-gray-600">{extractText(value.description)}</p>
@@ -133,13 +137,10 @@ export default function AboutPage() {
               <div className="flex items-center gap-4 mb-4">
                 {aboutData.attributes.missionIcon?.data?.attributes?.url && (
                   <div className="relative w-12 h-12">
-                    <Image
-                      // FIXED: Using the full URL directly from Strapi
-                    src={aboutData.attributes.missionIcon?.data?.attributes?.url?.startsWith('http') ? aboutData.attributes.missionIcon.data.attributes.url : `${API_URL}${aboutData.attributes.missionIcon?.data?.attributes?.url}`}
+                    <img
+                      src={aboutData.attributes.missionIcon.data.attributes.url}
                       alt="Mission"
-                      fill
-                      className="object-contain"
-                      unoptimized={true}
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 )}
@@ -155,12 +156,10 @@ export default function AboutPage() {
               <div className="flex items-center gap-4 mb-4">
                 {aboutData.attributes.visionIcon?.data?.attributes?.url && (
                   <div className="relative w-12 h-12">
-                    <Image
-                      src={aboutData.attributes.visionIcon?.data?.attributes?.url?.startsWith('http') ? aboutData.attributes.visionIcon.data.attributes.url : `${API_URL}${aboutData.attributes.visionIcon?.data?.attributes?.url}`}
+                    <img
+                      src={aboutData.attributes.visionIcon.data.attributes.url}
                       alt="Vision"
-                      fill
-                      className="object-contain"
-                      unoptimized={true}
+                      className="w-full h-full object-contain"
                     />
                   </div>
                 )}
@@ -179,8 +178,7 @@ export default function AboutPage() {
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
               <div className="relative w-full overflow-x-auto">
                 <img
-                  // FIXED: Using regular img tag for full-width images
-                 src={aboutData.attributes.qualityImage.data.attributes.url?.startsWith('http') ? aboutData.attributes.qualityImage.data.attributes.url : `${API_URL}${aboutData.attributes.qualityImage.data.attributes.url}`}
+                  src={aboutData.attributes.qualityImage.data.attributes.url}
                   alt="Quality Policy"
                   className="w-full h-auto object-contain"
                 />
@@ -197,7 +195,7 @@ export default function AboutPage() {
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                   <div className="relative w-full overflow-hidden">
                     <img
-                     src={aboutData.attributes.leadersImage.data.attributes.url?.startsWith('http') ? aboutData.attributes.leadersImage.data.attributes.url : `${API_URL}${aboutData.attributes.leadersImage.data.attributes.url}`}
+                      src={aboutData.attributes.leadersImage.data.attributes.url}
                       alt="Our Leaders"
                       className="w-full h-auto object-contain block"
                       style={{ display: 'block', marginBottom: '-4px' }}
@@ -212,7 +210,7 @@ export default function AboutPage() {
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                   <div className="relative w-full overflow-hidden">
                     <img
-                      src={aboutData.attributes.leaderFollowImage.data.attributes.url?.startsWith('http') ? aboutData.attributes.leaderFollowImage.data.attributes.url : `${API_URL}${aboutData.attributes.leaderFollowImage.data.attributes.url}`}
+                      src={aboutData.attributes.leaderFollowImage.data.attributes.url}
                       alt="Leadership Team"
                       className="w-full h-auto object-contain block"
                       style={{ display: 'block', marginTop: '-4px' }}
@@ -234,7 +232,7 @@ export default function AboutPage() {
                   <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
                     <div className="relative w-full overflow-x-auto">
                       <img
-                       src={cert.image?.data?.attributes?.url?.startsWith('http') ? cert.image.data.attributes.url : `${API_URL}${cert.image?.data?.attributes?.url}` || '/placeholder.jpg'}
+                        src={cert.image?.data?.attributes?.url || '/placeholder.jpg'}
                         alt={cert.title || 'ISO Certificate'}
                         className="w-full h-auto object-contain"
                       />
@@ -259,7 +257,7 @@ export default function AboutPage() {
               <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
                 <div className="relative w-full overflow-x-auto">
                   <img
-                    src={aboutData.attributes.milestoneImage.data.attributes.url?.startsWith('http') ? aboutData.attributes.milestoneImage.data.attributes.url : `${API_URL}${aboutData.attributes.milestoneImage.data.attributes.url}`}
+                    src={aboutData.attributes.milestoneImage.data.attributes.url}
                     alt="Our Journey"
                     className="w-full h-auto object-contain"
                   />
@@ -270,90 +268,154 @@ export default function AboutPage() {
         )}
 
         {/* 10. Group Companies - Side by side grid */}
-        {aboutData?.attributes?.groupCompanies?.length > 0 && (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Droga Group Companies</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {aboutData.attributes.groupCompanies.map((company, index) => (
-                <a 
-                  key={index}
-                  href={company.website || '#'}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-white rounded-lg shadow-md hover:shadow-xl transition border border-gray-100 p-6 flex flex-col items-center"
-                >
-                  <div className="relative h-32 w-full mb-4">
-                    <Image
-                      // FIXED: Using the full URL directly from Strapi
-                     src={company.logo?.data?.attributes?.url?.startsWith('http') ? company.logo.data.attributes.url : `${API_URL}${company.logo?.data?.attributes?.url}` || '/placeholder.png'}
-                      alt={company.name}
-                      fill
-                      className="object-contain"
-                      unoptimized={true}
-                    />
-                  </div>
-                  <h3 className="font-semibold text-gray-800 text-center">{company.name}</h3>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
+{aboutData?.attributes?.groupCompanies?.length > 0 && (
+  <div>
+    <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Droga Group Companies</h2>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      {aboutData.attributes.groupCompanies.map((company, index) => {
+        // Determine the correct link
+        let linkHref = company.website;
+        let isExternal = false;
+        
+        if (company.website === '/Home' || !company.website) {
+          linkHref = '/'; // Redirect to homepage
+          isExternal = false;
+        } else if (company.website?.startsWith('http')) {
+          isExternal = true;
+        }
+        
+        const Wrapper = linkHref ? (isExternal ? 'a' : Link) : 'div';
+        const wrapperProps = linkHref ? {
+          href: linkHref,
+          ...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})
+        } : {};
 
-        {/* 11. Our Partners - Slideshow with HUGE images */}
-        {aboutData?.attributes?.partners?.length > 0 && (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Our Partners</h2>
-            <div className="relative overflow-hidden">
-              <div className="flex overflow-x-hidden group">
-                <div className="animate-marquee whitespace-nowrap flex py-10">
-                  {aboutData.attributes.partners.map((partner, index) => (
-                    <a 
-                      key={index}
-                      href={partner.website || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mx-12 flex items-center justify-center"
-                    >
-                      <div className="w-64 h-48 bg-white rounded-lg flex items-center justify-center p-6 shadow-xl hover:shadow-2xl transition border border-gray-100">
-                        <Image
-                          // FIXED: Using the full URL directly from Strapi
-                          src={partner.logo?.data?.attributes?.url?.startsWith('http') ? partner.logo.data.attributes.url : `${API_URL}${partner.logo?.data?.attributes?.url}` || '/placeholder.png'}
-                          alt={partner.name}
-                          width={220}
-                          height={160}
-                          className="max-w-full max-h-full object-contain"
-                          unoptimized={true}
-                        />
-                      </div>
-                    </a>
-                  ))}
-                </div>
-                <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex py-10">
-                  {aboutData.attributes.partners.map((partner, index) => (
-                    <a 
-                      key={`dup-${index}`}
-                      href={partner.website || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mx-12 flex items-center justify-center"
-                    >
-                      <div className="w-64 h-48 bg-white rounded-lg flex items-center justify-center p-6 shadow-xl hover:shadow-2xl transition border border-gray-100">
-                        <Image
-                        src={partner.logo?.data?.attributes?.url?.startsWith('http') ? partner.logo.data.attributes.url : `${API_URL}${partner.logo?.data?.attributes?.url}` || '/placeholder.png'}
-                          alt={partner.name}
-                          width={220}
-                          height={160}
-                          className="max-w-full max-h-full object-contain"
-                          unoptimized={true}
-                        />
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
+        return (
+          <Wrapper
+            key={index}
+            {...wrapperProps}
+            className="bg-white rounded-lg shadow-md hover:shadow-xl transition border border-gray-100 p-6 flex flex-col items-center group"
+          >
+            <div className="relative h-32 w-full mb-4">
+              {company.logo?.data?.attributes?.url && (
+                <img
+                  src={company.logo.data.attributes.url}
+                  alt={company.name || 'Group company'}
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
-          </div>
-        )}
+            <h3 className="font-semibold text-gray-800 text-center mb-3">{company.name || 'Company'}</h3>
+            
+            {linkHref && (
+              <div className="mt-2">
+                {isExternal ? (
+                  <span className="inline-flex items-center px-4 py-2 bg-[#FFFF00] text-gray-800 rounded-lg text-sm font-semibold group-hover:bg-yellow-400 transition">
+                    Visit Website <span className="ml-1">→</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-4 py-2 bg-[#FFFF00] text-gray-800 rounded-lg text-sm font-semibold group-hover:bg-yellow-400 transition">
+                    Visit Website <span className="ml-1">→</span>
+                  </span>
+                )}
+              </div>
+            )}
+          </Wrapper>
+        );
+      })}
+    </div>
+  </div>
+)}
+
+        {/* 11. Our Partners - Slideshow with clickable logos */}
+{aboutData?.attributes?.partners?.length > 0 && (
+  <div>
+    <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Our Partners</h2>
+    <div className="relative overflow-hidden">
+      <div className="flex overflow-x-hidden group">
+        <div className="animate-marquee whitespace-nowrap flex py-10">
+          {aboutData.attributes.partners.map((partner, index) => {
+            // Only make clickable if website exists and is valid
+            const hasValidLink = partner.website && 
+              partner.website !== '#' && 
+              partner.website !== '/Home' && 
+              partner.website.startsWith('http');
+            
+            const Wrapper = hasValidLink ? 'a' : 'div';
+            const wrapperProps = hasValidLink ? {
+              href: partner.website,
+              target: "_blank",
+              rel: "noopener noreferrer"
+            } : {};
+
+            return (
+              <Wrapper
+                key={index}
+                {...wrapperProps}
+                className="mx-12 flex items-center justify-center group/partner"
+              >
+                <div className={`w-64 h-48 bg-white rounded-lg flex items-center justify-center p-6 shadow-xl hover:shadow-2xl transition border border-gray-100 ${hasValidLink ? 'cursor-pointer hover:border-[#FFFF00]' : ''}`}>
+                  {partner.logo?.data?.attributes?.url && (
+                    <img
+                      src={partner.logo.data.attributes.url}
+                      alt={partner.name}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
+                </div>
+                {hasValidLink && (
+                  <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover/partner:opacity-100 transition">
+                    Click to visit
+                  </span>
+                )}
+              </Wrapper>
+            );
+          })}
+        </div>
+        
+        {/* Duplicate for infinite scroll */}
+        <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex py-10">
+          {aboutData.attributes.partners.map((partner, index) => {
+            const hasValidLink = partner.website && 
+              partner.website !== '#' && 
+              partner.website !== '/Home' && 
+              partner.website.startsWith('http');
+            
+            const Wrapper = hasValidLink ? 'a' : 'div';
+            const wrapperProps = hasValidLink ? {
+              href: partner.website,
+              target: "_blank",
+              rel: "noopener noreferrer"
+            } : {};
+
+            return (
+              <Wrapper
+                key={`dup-${index}`}
+                {...wrapperProps}
+                className="mx-12 flex items-center justify-center group/partner"
+              >
+                <div className={`w-64 h-48 bg-white rounded-lg flex items-center justify-center p-6 shadow-xl hover:shadow-2xl transition border border-gray-100 ${hasValidLink ? 'cursor-pointer hover:border-[#FFFF00]' : ''}`}>
+                  {partner.logo?.data?.attributes?.url && (
+                    <img
+                      src={partner.logo.data.attributes.url}
+                      alt={partner.name}
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
+                </div>
+                {hasValidLink && (
+                  <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 opacity-0 group-hover/partner:opacity-100 transition">
+                    Click to visit
+                  </span>
+                )}
+              </Wrapper>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
         <style>{`
           @keyframes marquee {

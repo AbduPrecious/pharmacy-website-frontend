@@ -107,44 +107,53 @@ export default function CategoryProductsPage() {
           Showing {products.length} {products.length === 1 ? 'product' : 'products'}
         </div>
 
-        {/* Products Grid - FIXED IMAGE URLS */}
-        {products.length === 0 ? (
-          <p className="text-center text-gray-600 py-12">No products found in this category.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product) => (
-              <Link key={product.id} href={`/products/${categorySlug}/${product.attributes.slug}`}>
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group">
-                  <div className="relative h-64 overflow-hidden bg-gray-100">
-                    {product.attributes.image?.data?.attributes?.url ? (
-                      <Image
-                        // FIXED: Using the full URL directly from Strapi
-                        src={product.attributes.image.data.attributes.url?.startsWith('http') ? product.attributes.image.data.attributes.url : `${API_URL}${product.attributes.image.data.attributes.url}`}
-                        alt={product.attributes.name}
-                        fill
-                        className="object-contain p-4 group-hover:scale-105 transition duration-500"
-                        unoptimized={true}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        No image
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#FFFF00] transition">
-                      {product.attributes.name}
-                    </h3>
-                    <div className="inline-flex items-center text-[#FFFF00] font-semibold text-sm">
-                      View Product
-                      <span className="ml-1">→</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+     {/* Products Grid */}
+{products.length === 0 ? (
+  <p className="text-center text-gray-600 py-12">No products found in this category.</p>
+) : (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    {products.map((product) => (
+      <Link key={product.id} href={`/products/${categorySlug}/${product.attributes.slug}`}>
+        <div 
+          className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full group cursor-pointer"
+        >
+          <div className="relative h-64 overflow-hidden bg-gray-100 flex-shrink-0">
+            {product.attributes.image?.data?.attributes?.url ? (
+              <Image
+                src={product.attributes.image.data.attributes.url}
+                alt={product.attributes.name}
+                fill
+                className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                unoptimized={true}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                No image
+              </div>
+            )}
+            {product.attributes.isFeatured && (
+              <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold z-10">
+                Featured
+              </div>
+            )}
           </div>
-        )}
+          <div className="p-6 flex-1 flex flex-col">
+            <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#FFFF00] transition-colors line-clamp-2">
+              {product.attributes.name}
+            </h3>
+            
+            {/* SHORT BUTTON */}
+            <div className="mt-auto pt-4">
+              <span className="inline-block bg-[#FFFF00] text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 hover:shadow-md hover:scale-105">
+                View Product
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    ))}
+  </div>
+)}
 
         {/* Back to Products */}
         <div className="text-center mt-12">

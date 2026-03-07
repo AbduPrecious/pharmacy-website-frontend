@@ -152,39 +152,49 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((item) => (
-                <Link key={item.id} href={`/products/${item.attributes.category?.data?.attributes?.slug || 'uncategorized'}/${item.attributes.slug}`}>
-                  <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer">
-                    <div className="relative h-48 bg-gray-50">
-                      {item.attributes.image?.data?.attributes?.url ? (
-                        <Image
-                          // FIXED: Using the full URL directly from Strapi
-                          src={item.attributes.image.data.attributes.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image.data.attributes.url}`}
-                          alt={item.attributes.name}
-                          fill
-                          className="object-contain p-4"
-                          unoptimized={true}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          No image
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-gray-800 text-center">{item.attributes.name}</h3>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+       {/* Related Products */}
+{relatedProducts.length > 0 && (
+  <div>
+    <h2 className="text-3xl font-bold text-gray-800 mb-8">Related Products</h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {relatedProducts.map((item) => (
+        <Link key={item.id} href={`/products/${item.attributes.category?.data?.attributes?.slug || 'uncategorized'}/${item.attributes.slug}`}>
+          <div 
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full group cursor-pointer"
+          >
+            <div className="relative h-48 bg-gray-50 flex-shrink-0">
+              {item.attributes.image?.data?.attributes?.url ? (
+                <Image
+                  src={item.attributes.image.data.attributes.url}
+                  alt={item.attributes.name}
+                  fill
+                  className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+                  unoptimized={true}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  No image
+                </div>
+              )}
+            </div>
+            <div className="p-4 flex-1 flex flex-col">
+              <h3 className="font-semibold text-gray-800 text-center mb-2 line-clamp-2 group-hover:text-[#FFFF00] transition-colors">
+                {item.attributes.name}
+              </h3>
+              
+              {/* SHORT BUTTON */}
+              <div className="mt-auto pt-2">
+                <span className="inline-block w-full bg-[#FFFF00] text-gray-800 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-yellow-400 transition-all duration-300 hover:shadow-md hover:scale-105 text-center">
+                  View
+                </span>
+              </div>
             </div>
           </div>
-        )}
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
       </div>
     </div>
   );

@@ -47,17 +47,16 @@ export default function Home() {
   };
 
   const getSlideshow = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/slideshow?populate[slides][populate]=image`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching slideshow:', error);
-      return null;
-    }
-  };
-
+  try {
+    const response = await axios.get(`${API_URL}/api/slideshow?populate[slides][populate]=image`, {
+      headers: { Authorization: `Bearer ${API_TOKEN}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching slideshow:', error);
+    return null;
+  }
+};
   const getCategories = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/categories?populate=*`, {
@@ -356,51 +355,61 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      {/* NEWS SECTION - Dynamic from Strapi */}
-      {news.length > 0 && (
-        <div className="bg-gray-50 py-16">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">Latest News</h2>
-              <div className="w-24 h-1 bg-[#FFFF00] mx-auto"></div>
+{/* NEWS SECTION - Dynamic from Strapi */}
+{news.length > 0 && (
+  <div className="bg-gray-50 py-16">
+    <div className="max-w-7xl mx-auto px-4">
+      <div className="text-center mb-12">
+        <h2 className="text-4xl font-bold text-gray-800 mb-4">Latest News</h2>
+        <div className="w-24 h-1 bg-[#FFFF00] mx-auto"></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {news.slice(0, 6).map((item) => (
+          <div 
+            key={item.id} 
+            className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full group"
+          >
+            <div className="relative h-48 flex-shrink-0 overflow-hidden">
+              <Image 
+                src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
+                alt={item.attributes.title}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                unoptimized={true}
+              />
+              <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-bold z-10">NEWS</div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {news.slice(0, 6).map((item) => (
-                <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
-                  <div className="relative h-48">
-                    <Image 
-                      // FIXED: Using the full URL directly from Strapi
-                     src={item.attributes.image?.data?.attributes?.url?.startsWith('http') ? item.attributes.image.data.attributes.url : `${API_URL}${item.attributes.image?.data?.attributes?.url}` || '/placeholder.jpg'}
-
-                      alt={item.attributes.title}
-                      fill
-                      className="object-cover"
-                      unoptimized={true}
-                    />
-                    <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-bold">NEWS</div>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{item.attributes.title}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">{extractText(item.attributes.description)}</p>
-                    <Link href={`/news/${item.id}`} className="text-[#FFFF00] font-semibold hover:underline">
-                      Read More →
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="text-center mt-12">
-              <Link href="/news">
-                <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md">
-                  View All News
-                </button>
-              </Link>
+            <div className="p-6 flex-1 flex flex-col">
+              <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-[#FFFF00] transition-colors">
+                {item.attributes.title}
+              </h3>
+              <p className="text-gray-600 mb-4 line-clamp-3 flex-1">
+                {extractText(item.attributes.description)}
+              </p>
+              
+              {/* SHORTER BUTTON */}
+              <div className="mt-auto pt-4">
+                <Link 
+                  href={`/news/${item.id}`} 
+                  className="inline-block bg-[#FFFF00] text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 hover:shadow-md hover:scale-105"
+                >
+                  Read More
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
+        ))}
+      </div>
+      <div className="text-center mt-12">
+        <Link href="/news">
+          <button className="bg-[#FFFF00] text-gray-800 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition shadow-md hover:shadow-lg hover:scale-105 transform duration-300">
+            View All News
+          </button>
+        </Link>
+      </div>
+    </div>
+  </div>
+)}
       {/* CLIENTS SECTION - Dynamic from Strapi */}
       {clients.length > 0 && (
         <div className="bg-white py-16 overflow-hidden">

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import Navigation from '../components/Navigation';
 
 function ProductsContent() {
   const [products, setProducts] = useState([]);
@@ -22,37 +23,37 @@ function ProductsContent() {
   const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-    
-    const searchParam = searchParams.get('search');
-    const noResultsParam = searchParams.get('noresults');
-    
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-    
-    if (noResultsParam === 'true') {
-      setNoResults(true);
-    }
-  }, [searchParams]);
+ useEffect(() => {
+  fetchProducts();
+  fetchCategories();
+  
+  const searchParam = searchParams.get('search');
+  const noResultsParam = searchParams.get('noresults');
+  
+  if (searchParam) {
+    setSearchQuery(searchParam);
+  }
+  
+  if (noResultsParam === 'true') {
+    setNoResults(true);
+  }
+}, [searchParams]);
 
   const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-      });
-      if (response.data?.data) {
-        setProducts(response.data.data);
-        setFilteredProducts(response.data.data);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
+  try {
+    const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
+      headers: { Authorization: `Bearer ${API_TOKEN}` }
+    });
+    if (response.data?.data) {
+      setProducts(response.data.data);
+      setFilteredProducts(response.data.data);
     }
-  };
+    setLoading(false);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    setLoading(false);
+  }
+};
 
   const fetchCategories = async () => {
     try {
@@ -67,39 +68,41 @@ function ProductsContent() {
     }
   };
 
-  const filterAndSortProducts = () => {
-    let filtered = [...products];
+ const filterAndSortProducts = () => {
+  let filtered = [...products];
 
-    if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.attributes.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Filter by search query
+  if (searchQuery) {
+    filtered = filtered.filter(product =>
+      product.attributes.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  // Filter by category
+  if (selectedCategory !== 'all') {
+    filtered = filtered.filter(product => 
+      product.attributes.category?.data?.id === parseInt(selectedCategory)
+    );
+  }
+
+  // Sort products
+  filtered.sort((a, b) => {
+    switch(sortBy) {
+      case 'name-asc':
+        return a.attributes.name.localeCompare(b.attributes.name);
+      case 'name-desc':
+        return b.attributes.name.localeCompare(a.attributes.name);
+      case 'newest':
+        return new Date(b.attributes.createdAt) - new Date(a.attributes.createdAt);
+      default:
+        return 0;
     }
+  });
 
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => 
-        product.attributes.category?.data?.id === parseInt(selectedCategory)
-      );
-    }
-
-    filtered.sort((a, b) => {
-      switch(sortBy) {
-        case 'name-asc':
-          return a.attributes.name.localeCompare(b.attributes.name);
-        case 'name-desc':
-          return b.attributes.name.localeCompare(a.attributes.name);
-        case 'newest':
-          return new Date(b.attributes.createdAt) - new Date(a.attributes.createdAt);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredProducts(filtered);
-    setCurrentPage(1);
-    setNoResults(filtered.length === 0);
-  };
-
+  setFilteredProducts(filtered);
+  setCurrentPage(1);
+  setNoResults(filtered.length === 0);
+};
   useEffect(() => {
     filterAndSortProducts();
   }, [products, selectedCategory, sortBy, searchQuery]);
@@ -113,7 +116,7 @@ function ProductsContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      {/* Filter and Sort Bar */}
+      {/* Category Filter and Sort Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
         <div className="w-full md:w-auto flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <span className="text-gray-700 font-medium text-sm sm:text-base">Filter:</span>
@@ -143,7 +146,6 @@ function ProductsContent() {
         </div>
       </div>
 
-      {/* Search Query Display */}
       {searchQuery && (
         <div className="mb-6 p-4 bg-blue-50 rounded-lg">
           <p className="text-gray-700">
@@ -153,7 +155,6 @@ function ProductsContent() {
         </div>
       )}
 
-      {/* Results Count */}
       {filteredProducts.length > 0 && (
         <div className="text-gray-600 mb-6">
           Showing {indexOfFirstProduct + 1}-{Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} results
@@ -200,14 +201,16 @@ function ProductsContent() {
                 key={product.id} 
                 href={`/products/${product.attributes.category?.data?.attributes?.slug || 'uncategorized'}/${product.attributes.slug}`}
               >
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition cursor-pointer group">
-                  <div className="relative h-64 overflow-hidden bg-gray-100">
+                <div 
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col h-full group cursor-pointer"
+                >
+                  <div className="relative h-64 overflow-hidden bg-gray-100 flex-shrink-0">
                     {product.attributes.image?.data?.attributes?.url ? (
                       <Image
-                        src={product.attributes.image.data.attributes.url}
+                        src={product.attributes.image?.data?.attributes?.url}
                         alt={product.attributes.name}
                         fill
-                        className="object-contain p-4 group-hover:scale-105 transition duration-500"
+                        className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
                         unoptimized={true}
                       />
                     ) : (
@@ -216,21 +219,24 @@ function ProductsContent() {
                       </div>
                     )}
                     {product.attributes.isFeatured && (
-                      <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="absolute top-4 left-4 bg-[#FFFF00] text-gray-800 px-3 py-1 rounded-full text-sm font-semibold z-10">
                         Featured
                       </div>
                     )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#FFFF00] transition">
+                  <div className="p-6 flex-1 flex flex-col">
+                    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#FFFF00] transition-colors line-clamp-2">
                       {product.attributes.name}
                     </h3>
                     <p className="text-gray-600 text-sm mb-3">
                       {product.attributes.category?.data?.attributes?.name || 'Uncategorized'}
                     </p>
-                    <div className="inline-flex items-center text-[#FFFF00] font-semibold text-sm">
-                      View Product
-                      <span className="ml-1">→</span>
+                    
+                    {/* SHORT BUTTON */}
+                    <div className="mt-auto pt-4">
+                      <span className="inline-block bg-[#FFFF00] text-gray-800 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-all duration-300 hover:shadow-md hover:scale-105">
+                        View Product
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -240,37 +246,83 @@ function ProductsContent() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-12">
+            <div className="flex flex-wrap justify-center items-center gap-2 mt-8 md:mt-12">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => {
+                  setCurrentPage(prev => Math.max(prev - 1, 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white font-medium"
+                className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white font-medium"
               >
-                Previous
+                <span className="hidden sm:inline">Previous</span>
+                <span className="sm:hidden">←</span>
               </button>
               
-              <div className="flex gap-1">
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 flex items-center justify-center rounded-lg transition font-medium ${
-                      currentPage === i + 1
-                        ? 'bg-[#FFFF00] text-gray-800'
-                        : 'border border-gray-300 hover:bg-gray-50 text-gray-900 bg-white'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+              <div className="flex flex-wrap justify-center gap-1 md:gap-2">
+                {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  
+                  if (totalPages > 5) {
+                    if (
+                      pageNum === 1 ||
+                      pageNum === totalPages ||
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setCurrentPage(pageNum);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={`w-8 h-8 md:w-10 md:h-10 text-sm md:text-base rounded-lg transition font-medium ${
+                            currentPage === pageNum
+                              ? 'bg-[#FFFF00] text-gray-800'
+                              : 'border border-gray-300 hover:bg-gray-50 text-gray-900 bg-white'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (
+                      pageNum === currentPage - 2 ||
+                      pageNum === currentPage + 2
+                    ) {
+                      return <span key={i} className="text-gray-500 px-1">...</span>;
+                    }
+                    return null;
+                  } else {
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setCurrentPage(pageNum);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className={`w-8 h-8 md:w-10 md:h-10 text-sm md:text-base rounded-lg transition font-medium ${
+                          currentPage === pageNum
+                            ? 'bg-[#FFFF00] text-gray-800'
+                            : 'border border-gray-300 hover:bg-gray-50 text-gray-900 bg-white'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                })}
               </div>
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() => {
+                  setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white font-medium"
+                className="px-3 py-2 md:px-4 md:py-2 text-sm md:text-base border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 bg-white font-medium"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
+                <span className="sm:hidden">→</span>
               </button>
             </div>
           )}
