@@ -20,6 +20,10 @@ function ProductsContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [noResults, setNoResults] = useState(false);
   
+  // Force no caching for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
   const productsPerPage = 9;
   const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
   const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
@@ -49,20 +53,28 @@ function ProductsContent() {
   }, [products]);
 
   const fetchProducts = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
-      });
-      if (response.data?.data) {
-        setProducts(response.data.data);
-        setFilteredProducts(response.data.data);
+  try {
+    const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
+      headers: { 
+        Authorization: `Bearer ${API_TOKEN}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+      },
+      params: {
+        _t: Date.now() // This adds a timestamp to prevent caching
       }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setLoading(false);
+    });
+    if (response.data?.data) {
+      console.log('✅ Products fetched fresh:', response.data.data.length);
+      setProducts(response.data.data);
+      setFilteredProducts(response.data.data);
     }
-  };
+    setLoading(false);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    setLoading(false);
+  }
+};
 
   const fetchCategories = async () => {
     try {
