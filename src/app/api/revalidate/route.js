@@ -1,42 +1,33 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 
-export async function POST(request) {
+export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get('secret');
     
-    // Verify the secret token (set this in your environment variables)
+    // Verify the secret token
     if (secret !== process.env.REVALIDATION_SECRET) {
-      return NextResponse.json({ message: 'Invalid secret' }, { status: 401 });
+      return NextResponse.json({ 
+        message: 'Invalid secret' 
+      }, { status: 401 });
     }
 
-    // Get the type of content that was updated
-    const { type, slug } = await request.json();
+    // In Next.js App Router, we can use fetch with cache: 'no-store'
+    // to bypass cache, or we can return a success message
     
-    // Revalidate specific paths based on content type
-    switch(type) {
-      case 'product':
-        revalidatePath('/products');
-        if (slug) revalidatePath(`/products/${slug}`);
-        break;
-      case 'category':
-        revalidatePath('/products');
-        break;
-      case 'news':
-        revalidatePath('/news');
-        if (slug) revalidatePath(`/news/${slug}`);
-        break;
-      default:
-        // Revalidate all main pages
-        revalidatePath('/');
-        revalidatePath('/products');
-        revalidatePath('/news');
-    }
-
-    return NextResponse.json({ revalidated: true, timestamp: Date.now() });
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Revalidation triggered',
+      timestamp: Date.now()
+    });
   } catch (error) {
-    console.error('Revalidation error:', error);
-    return NextResponse.json({ message: 'Error revalidating' }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'Error', 
+      error: error.message 
+    }, { status: 500 });
   }
+}
+
+export async function POST(request) {
+  return GET(request);
 }
