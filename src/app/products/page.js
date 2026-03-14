@@ -6,8 +6,6 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 function ProductsContent() {
   const [products, setProducts] = useState([]);
