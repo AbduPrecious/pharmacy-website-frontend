@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 function ProductsContent() {
   const [products, setProducts] = useState([]);
@@ -23,37 +25,44 @@ function ProductsContent() {
   const API_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN;
   const searchParams = useSearchParams();
 
- useEffect(() => {
-  fetchProducts();
-  fetchCategories();
-  
-  const searchParam = searchParams.get('search');
-  const noResultsParam = searchParams.get('noresults');
-  
-  if (searchParam) {
-    setSearchQuery(searchParam);
-  }
-  
-  if (noResultsParam === 'true') {
-    setNoResults(true);
-  }
-}, [searchParams]);
+  useEffect(() => {
+    fetchProducts();
+    fetchCategories();
+    
+    const searchParam = searchParams.get('search');
+    const noResultsParam = searchParams.get('noresults');
+    
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    }
+    
+    if (noResultsParam === 'true') {
+      setNoResults(true);
+    }
+  }, [searchParams]);
+
+  // DEBUG: Log products when they change
+  useEffect(() => {
+    console.log('🔥 ALL PRODUCTS:', products);
+    console.log('🔥 PRODUCT COUNT:', products.length);
+    console.log('🔥 NEW PRODUCT (ID 51):', products.find(p => p.id === 51));
+  }, [products]);
 
   const fetchProducts = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
-      headers: { Authorization: `Bearer ${API_TOKEN}` }
-    });
-    if (response.data?.data) {
-      setProducts(response.data.data);
-      setFilteredProducts(response.data.data);
+    try {
+      const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
+        headers: { Authorization: `Bearer ${API_TOKEN}` }
+      });
+      if (response.data?.data) {
+        setProducts(response.data.data);
+        setFilteredProducts(response.data.data);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setLoading(false);
     }
-    setLoading(false);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    setLoading(false);
-  }
-};
+  };
 
   const fetchCategories = async () => {
     try {
@@ -68,41 +77,39 @@ function ProductsContent() {
     }
   };
 
- const filterAndSortProducts = () => {
-  let filtered = [...products];
+  const filterAndSortProducts = () => {
+    let filtered = [...products];
 
-  // Filter by search query
-  if (searchQuery) {
-    filtered = filtered.filter(product =>
-      product.attributes.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  // Filter by category
-  if (selectedCategory !== 'all') {
-    filtered = filtered.filter(product => 
-      product.attributes.category?.data?.id === parseInt(selectedCategory)
-    );
-  }
-
-  // Sort products
-  filtered.sort((a, b) => {
-    switch(sortBy) {
-      case 'name-asc':
-        return a.attributes.name.localeCompare(b.attributes.name);
-      case 'name-desc':
-        return b.attributes.name.localeCompare(a.attributes.name);
-      case 'newest':
-        return new Date(b.attributes.createdAt) - new Date(a.attributes.createdAt);
-      default:
-        return 0;
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.attributes.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-  });
 
-  setFilteredProducts(filtered);
-  setCurrentPage(1);
-  setNoResults(filtered.length === 0);
-};
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => 
+        product.attributes.category?.data?.id === parseInt(selectedCategory)
+      );
+    }
+
+    filtered.sort((a, b) => {
+      switch(sortBy) {
+        case 'name-asc':
+          return a.attributes.name.localeCompare(b.attributes.name);
+        case 'name-desc':
+          return b.attributes.name.localeCompare(a.attributes.name);
+        case 'newest':
+          return new Date(b.attributes.createdAt) - new Date(a.attributes.createdAt);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1);
+    setNoResults(filtered.length === 0);
+  };
+
   useEffect(() => {
     filterAndSortProducts();
   }, [products, selectedCategory, sortBy, searchQuery]);
