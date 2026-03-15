@@ -7,6 +7,10 @@ import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Navigation from '../components/Navigation';
 
+// Force no caching for this page
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function ProductsContent() {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -39,19 +43,22 @@ function ProductsContent() {
     }
   }, [searchParams]);
 
-  // DEBUG: Log products when they change
-  useEffect(() => {
-    console.log('🔥 ALL PRODUCTS:', products);
-    console.log('🔥 PRODUCT COUNT:', products.length);
-    console.log('🔥 NEW PRODUCT (ID 51):', products.find(p => p.id === 51));
-  }, [products]);
-
+  // FIXED: Added cache-busting headers
   const fetchProducts = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/products?populate[category]=*&populate[image]=*&pagination[pageSize]=100`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
+        headers: { 
+          Authorization: `Bearer ${API_TOKEN}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        params: {
+          _t: Date.now() // This timestamp prevents URL caching
+        }
       });
       if (response.data?.data) {
+        console.log('✅ Products fetched fresh:', response.data.data.length);
         setProducts(response.data.data);
         setFilteredProducts(response.data.data);
       }
@@ -65,7 +72,14 @@ function ProductsContent() {
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/categories`, {
-        headers: { Authorization: `Bearer ${API_TOKEN}` }
+        headers: { 
+          Authorization: `Bearer ${API_TOKEN}`,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        },
+        params: {
+          _t: Date.now()
+        }
       });
       if (response.data?.data) {
         setCategories(response.data.data);
